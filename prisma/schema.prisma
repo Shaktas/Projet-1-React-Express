@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  UserId        Int        @id @default(autoincrement())
+  UserPseudo    String
+  UserEmail     String     @unique
+  UserPassword  String
+  UserCreatedAt DateTime   @default(now())
+  UserUpdatedAt DateTime   @updatedAt
+  Vault         Vault[]
+  Posseder      Posseder[]
+}
+
+model Vault {
+  VaultId        Int        @id @default(autoincrement())
+  VaultName      String
+  VaultCreatedAt DateTime   @default(now())
+  VaultUpdatedAt DateTime   @updatedAt
+  UserId         Int
+  User           User       @relation(fields: [UserId], references: [UserId])
+  Card           Card[]
+  Posseder       Posseder[]
+}
+
+model Card {
+  CardId        Int      @id @default(autoincrement())
+  CardTitle     String
+  CardLogin     String
+  CardPassword  String
+  CardUrl       String
+  CardCreatedAt DateTime @default(now())
+  CardUpdatedAt DateTime @updatedAt
+  Vault         Vault    @relation(fields: [VaultId], references: [VaultId])
+  VaultId       Int
+}
+
+model Posseder {
+  VaultId Int
+  UserId  Int
+  Vault   Vault @relation(fields: [VaultId], references: [VaultId])
+  User    User  @relation(fields: [UserId], references: [UserId])
+
+  @@id([VaultId, UserId])
+}
