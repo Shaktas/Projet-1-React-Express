@@ -1,4 +1,3 @@
-import { dir } from "console";
 import dotenv from "dotenv";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -11,7 +10,7 @@ const requiredEnvVars = [
   "DATABASE_URL",
   "RSA_PRIVATE_KEY_PATH",
   "RSA_PUBLIC_KEY_PATH",
-  "SECRET_KEY",
+  "SECRET_KEY_PATH",
   "PORT",
 ];
 
@@ -30,7 +29,7 @@ export const config = {
     public: process.env.RSA_PUBLIC_KEY_PATH,
   },
   aes: {
-    key: process.env.SECRET_KEY,
+    key: process.env.SECRET_KEY_PATH,
   },
   port: process.env.PORT,
 };

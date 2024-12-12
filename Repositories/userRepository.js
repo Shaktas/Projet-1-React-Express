@@ -22,9 +22,7 @@ async function getVaultsByUserId(id) {
 }
 
 async function createUser(userData) {
-  const newUser = await prisma.user.create({
-    data: userData,
-  });
+  const newUser = await prisma.user.create(userData);
   return newUser;
 }
 
