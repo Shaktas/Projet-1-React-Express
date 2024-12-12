@@ -1,13 +1,18 @@
 import crypto from "crypto";
+import { config } from "./env.js";
+import fs from "fs/promises";
 
 const algorithm = "aes-256-gcm";
-const secretKey = crypto.randomBytes(32);
-const jwtSecret = crypto.randomBytes(32);
+const secretKey = fs.readFileSync(config.aes.key, "utf8");
 
 // A comprendre
 function encrypt(text) {
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+  const cipher = crypto.createCipheriv(
+    algorithm,
+    Buffer.from(secretKey, "hex"),
+    iv
+  );
   let encrypted = cipher.update(text, "utf8", "hex");
   encrypted += cipher.final("hex");
   const authTag = cipher.getAuthTag();
@@ -25,17 +30,3 @@ function decrypt(encrypted, iv, tag) {
   decrypted += decipher.final("utf8");
   return decrypted;
 }
-
-function generateToken(payload) {
-  const header = Buffer.from(
-    JSON.stringify({ alg: "HS256", typ: "JWT" })
-  ).toString("base64");
-  const content = Buffer.from(JSON.stringify(payload)).toString("base64");
-  const signature = crypto
-    .createHmac("sha256", jwtSecret)
-    .update(`${header}.${content}`)
-    .digest("base64");
-  return `${header}.${content}.${signature}`;
-}
-
-export { encrypt, decrypt, generateToken };
