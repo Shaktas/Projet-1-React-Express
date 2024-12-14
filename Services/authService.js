@@ -1,9 +1,9 @@
-import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import fs from "fs/promises";
+import jwt from "jsonwebtoken";
 import path from "path";
 import { config } from "../Config/env.js";
-import { createUser, getUserById } from "../Repositories/userRepository.js";
+import { createUser } from "../Repositories/userRepository.js";
 
 const jwtExpiresIn = "24h";
 const algorithm = "RS256";

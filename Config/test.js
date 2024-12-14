@@ -1,8 +1,16 @@
 import { config } from "./env.js";
 // import AuthService from "../Services/authSercice.js";
 import crypto from "crypto";
-console.log(config.port);
 
-const key = crypto.randomBytes(32).toString("hex");
-
-console.log(key);
+const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
+  modulusLength: 2048,
+  publicKeyEncoding: {
+    type: "spki",
+    format: "pem",
+  },
+  privateKeyEncoding: {
+    type: "pkcs8",
+    format: "pem",
+  },
+});
+console.log(privateKey, publicKey);

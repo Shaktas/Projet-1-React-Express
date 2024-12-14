@@ -12,6 +12,7 @@ const requiredEnvVars = [
   "RSA_PUBLIC_KEY_PATH",
   "SECRET_KEY_PATH",
   "PORT",
+  "NODE_ENV",
 ];
 
 for (const envVar of requiredEnvVars) {
@@ -32,4 +33,5 @@ export const config = {
     key: process.env.SECRET_KEY_PATH,
   },
   port: process.env.PORT,
+  app: process.env.NODE_ENV,
 };
