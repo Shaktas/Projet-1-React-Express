@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import jwt from "jsonwebtoken";
 import path from "path";
 import { config } from "../Config/env.js";
-import { createUser } from "../Repositories/userRepository.js";
+import { createUser, getUserByEmail } from "../Repositories/userRepository.js";
 
 const jwtExpiresIn = "24h";
 const algorithm = "RS256";
@@ -78,15 +78,20 @@ class AuthService {
 
   /**
    * Login user and generate token
-   * @param {Object} user - User data from database
+   * @param {Object} user - User data from LOGIN
    * @param {string} password - Plain text password
    * @returns {Promise<Object>} Authentication result
    */
-  async login(user, password) {
+  async login(user) {
     try {
+      const userDB = getUserByEmail(user.UserEmail);
+      if (!userDB) {
+        throw new Error("User not found");
+      }
+
       const isValidPassword = await this.verifyPassword(
-        password,
-        user.UserPassword
+        user.UserPassword,
+        userDB.UserPassword
       );
 
       if (!isValidPassword) {

@@ -4,7 +4,7 @@ export const register = async (req, res) => {
   const userData = {
     UserPseudo: req.body.pseudo,
     UserEmail: req.body.email,
-    UserPassword: req.body.password,
+    UserPassword: req.body.pwd,
   };
   const auth = await authService.register(userData);
 
@@ -32,10 +32,10 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   const userData = {
     UserEmail: req.body.email,
-    UserPassword: req.body.password,
+    UserPassword: req.body.pwd,
   };
 
-  const auth = authService.login(userData);
+  const auth = await authService.login(userData);
 
   if (auth.success) {
     // Set HTTP-only cookie
@@ -49,8 +49,8 @@ export const login = async (req, res) => {
     res.json({
       success: true,
       user: {
-        id: auth.user.id,
-        email: auth.user.email,
+        id: auth.User.id,
+        email: auth.User.email,
       },
     });
   } else {
