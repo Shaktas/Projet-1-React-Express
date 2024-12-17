@@ -22,7 +22,7 @@ async function getUserByEmail(email) {
 
 async function getVaultsByUserId(id) {
   const getVaultsByUserId = await prisma.user.findUnique({
-    where: { Userid: parseInt(id) },
+    where: { UserId: parseInt(id) },
     include: { Vault: true },
   });
   return getVaultsByUserId;

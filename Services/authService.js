@@ -84,7 +84,7 @@ class AuthService {
    */
   async login(user) {
     try {
-      const userDB = getUserByEmail(user.UserEmail);
+      const userDB = await getUserByEmail(user.UserEmail);
       if (!userDB) {
         throw new Error("User not found");
       }
@@ -108,9 +108,9 @@ class AuthService {
         success: true,
         token,
         user: {
-          id: user.UserId,
-          email: user.UserEmail,
-          pseudo: user.UserPseudo,
+          id: userDB.UserId,
+          email: userDB.UserEmail,
+          pseudo: userDB.UserPseudo,
         },
       };
     } catch (error) {
@@ -168,6 +168,26 @@ class AuthService {
           message: "Email already exists",
         };
       }
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  async RefreshToken(token) {
+    try {
+      const decoded = this.verifyToken(token);
+      if (!decoded) {
+        throw new Error("Invalid or expired token");
+      }
+
+      const newToken = this.generateToken(decoded);
+      return {
+        success: true,
+        token: newToken,
+      };
+    } catch (error) {
       return {
         success: false,
         message: error.message,

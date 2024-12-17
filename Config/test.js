@@ -14,12 +14,3 @@
 //   },
 // });
 // console.log(privateKey, publicKey);
-const test = {
-  name: "test",
-  age: 25,
-  blabla: "hello",
-};
-
-const { name, age, blabla } = test;
-
-console.log(name, age, blabla);

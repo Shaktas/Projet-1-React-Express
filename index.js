@@ -7,7 +7,7 @@ import authRoute from "./Routes/authRoute.js";
 // import cardRoute from "./Routes/cardRoute.js";
 import { config } from "./Config/env.js";
 import cookieParser from "cookie-parser";
-import { getAllUsers } from "./Repositories/userRepository.js";
+import { getAllUsers, getUserById } from "./Repositories/userRepository.js";
 
 const app = express();
 
@@ -30,4 +30,12 @@ app.use("/", authRoute);
 const PORT = config.port;
 app.listen(PORT, () => {
   console.log(`Serveur Express sur le port ${PORT}`);
+});
+
+app.get("/user/:id", async (req, res) => {
+  const id = req.params.id;
+  const user = await getUserById(id);
+  console.log(user);
+
+  res.json(user);
 });

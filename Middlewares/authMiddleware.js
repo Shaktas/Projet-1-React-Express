@@ -4,7 +4,9 @@ export const isAuthenticated = (req, res, next) => {
   const token = req.cookies.jwt;
 
   if (!token) {
-    return res.status(401).json({ message: "Authentication token required" });
+    return res
+      .status(401)
+      .json({ success: false, message: "Authentication token required" });
   }
 
   const decoded = AuthService.verifyToken(token);
