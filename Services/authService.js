@@ -5,12 +5,12 @@ import path from "path";
 import { config } from "../Config/env.js";
 import { createUser, getUserByEmail } from "../Repositories/userRepository.js";
 
-const jwtExpiresIn = "24h";
 const algorithm = "RS256";
 
 class AuthService {
   privateKey = null;
   publicKey = null;
+  refreshKey = null;
 
   constructor() {
     this.initializeKeys();
@@ -24,6 +24,10 @@ class AuthService {
       );
       this.publicKey = await fs.readFile(
         path.resolve(config.jwt.public),
+        "utf8"
+      );
+      this.refreshKey = await fs.readFile(
+        path.resolve(config.jwt.refresh),
         "utf8"
       );
     } catch (error) {
@@ -52,25 +56,49 @@ class AuthService {
   }
 
   /**
-   * Generate JWT token
+   * Generate JWT access token
    * @param {Object} payload - Data to encode in token
-   * @returns {string} JWT token
+   * @returns {string} JWT access token
    */
-  generateToken(payload) {
+  generateAccessToken(payload) {
     return jwt.sign(payload, this.privateKey, {
-      algorithm: algorithm,
-      expiresIn: jwtExpiresIn,
+      algorithm: "RS256",
+      expiresIn: "10m",
     });
   }
 
   /**
-   * Verify JWT token
+   * Generate JWT refresh token
+   * @param {Object} payload - Data to encode in token
+   * @returns {string} JWT refresh token
+   */
+  generateRefreshToken(payload) {
+    return jwt.sign(payload, this.refreshKey, {
+      algorithm: "HS256",
+      expiresIn: "1d",
+    });
+  }
+  /**
+   * Verify JWT acccess token
    * @param {string} token - JWT token to verify
    * @returns {Object|null} Decoded token payload or null if invalid
    */
   verifyToken(token) {
     try {
-      return jwt.verify(token, this.publicKey, { algorithms: [algorithm] });
+      return jwt.verify(token, this.publicKey, { algorithms: ["RS256"] });
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Verify JWT refresh token
+   * @param {string} token - JWT token to verify
+   * @returns {Object|null} Decoded token payload or null if invalid
+   */
+  verifyRefreshToken(token) {
+    try {
+      return jwt.verify(token, this.refreshKey, { algorithms: ["HS256"] });
     } catch (error) {
       return null;
     }
@@ -85,20 +113,22 @@ class AuthService {
   async login(user) {
     try {
       const userDB = await getUserByEmail(user.UserEmail);
-      if (!userDB) {
-        throw new Error("User not found");
-      }
 
       const isValidPassword = await this.verifyPassword(
         user.UserPassword,
         userDB.UserPassword
       );
 
-      if (!isValidPassword) {
-        throw new Error("Invalid password");
+      if (!isValidPassword || !userDB) {
+        throw new Error("Conexion failed");
       }
 
-      const token = this.generateToken({
+      const AccessToken = this.generateAccessToken({
+        id: user.UserId,
+        email: user.UserEmail,
+        pseudo: user.UserPseudo,
+      });
+      const RefreshToken = this.generateRefreshToken({
         id: user.UserId,
         email: user.UserEmail,
         pseudo: user.UserPseudo,
@@ -106,7 +136,8 @@ class AuthService {
 
       return {
         success: true,
-        token,
+        AccessToken,
+        RefreshToken,
         user: {
           id: userDB.UserId,
           email: userDB.UserEmail,
@@ -145,7 +176,13 @@ class AuthService {
         },
       });
 
-      const token = this.generateToken({
+      const accessToken = this.generateAccessToken({
+        id: newUser.UserId,
+        email: newUser.UserEmail,
+        pseudo: newUser.UserPseudo,
+      });
+
+      const refreshToken = this.generateRefreshToken({
         id: newUser.UserId,
         email: newUser.UserEmail,
         pseudo: newUser.UserPseudo,
@@ -153,7 +190,8 @@ class AuthService {
 
       return {
         success: true,
-        token,
+        accessToken,
+        refreshToken,
         user: {
           id: newUser.UserId,
           email: newUser.UserEmail,
@@ -179,7 +217,11 @@ class AuthService {
     try {
       const decoded = this.verifyToken(token);
       if (!decoded) {
-        throw new Error("Invalid or expired token");
+        return {
+          success: false,
+          code: 401,
+          message: "Invalid or expired token",
+        };
       }
 
       const newToken = this.generateToken(decoded);

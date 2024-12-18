@@ -11,6 +11,7 @@ const requiredEnvVars = [
   "RSA_PRIVATE_KEY_PATH",
   "RSA_PUBLIC_KEY_PATH",
   "SECRET_KEY_PATH",
+  "REFRESH_KEY_PATH",
   "PORT",
   "NODE_ENV",
 ];
@@ -28,6 +29,7 @@ export const config = {
   jwt: {
     private: process.env.RSA_PRIVATE_KEY_PATH,
     public: process.env.RSA_PUBLIC_KEY_PATH,
+    refresh: process.env.REFRESH_KEY_PATH,
   },
   aes: {
     key: process.env.SECRET_KEY_PATH,

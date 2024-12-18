@@ -18,3 +18,18 @@ export const isAuthenticated = (req, res, next) => {
   req.user = decoded;
   next();
 };
+
+export const refreshToken = async (req, res) => {
+  try {
+    const { refresh } = req.cookies;
+    const decoded = AuthService.verifyRefreshToken(refresh);
+
+    if (!decoded) {
+      throw new Error("Invalid or expired token");
+    }
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: error.message });
+  }
+};

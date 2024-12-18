@@ -1,6 +1,6 @@
 // import { config } from "./env.js";
 // // import AuthService from "../Services/authSercice.js";
-// import crypto from "crypto";
+import crypto from "crypto";
 
 // const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
 //   modulusLength: 2048,
@@ -14,3 +14,5 @@
 //   },
 // });
 // console.log(privateKey, publicKey);
+const cle = crypto.randomBytes(40).toString("hex");
+console.log(cle);
