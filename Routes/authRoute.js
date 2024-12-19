@@ -1,7 +1,9 @@
-import { register, login } from "../Controllers/authController.js";
+import { register, login, refresh } from "../Controllers/authController.js";
 import express from "express";
-import { isAuthenticated } from "../Middlewares/authMiddleware.js";
-import { getAllUsers } from "../Repositories/userRepository.js";
+import {
+  isAuthenticated,
+  refreshToken,
+} from "../Middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -12,4 +14,7 @@ router.post("/login", login);
 router.post("/verify", isAuthenticated, (req, res) => {
   res.send({ success: true });
 });
+
+router.post("/refresh", refreshToken, refresh);
+
 export default router;

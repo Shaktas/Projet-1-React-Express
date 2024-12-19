@@ -83,7 +83,7 @@ class AuthService {
    * @param {string} token - JWT token to verify
    * @returns {Object|null} Decoded token payload or null if invalid
    */
-  verifyToken(token) {
+  verifyAccessToken(token) {
     try {
       return jwt.verify(token, this.publicKey, { algorithms: ["RS256"] });
     } catch (error) {
@@ -106,7 +106,7 @@ class AuthService {
 
   /**
    * Login user and generate token
-   * @param {Object} user - User data from LOGIN
+   * @param {Object} user - User data from Login form
    * @param {string} password - Plain text password
    * @returns {Promise<Object>} Authentication result
    */
@@ -123,25 +123,23 @@ class AuthService {
         throw new Error("Conexion failed");
       }
 
-      const AccessToken = this.generateAccessToken({
-        id: user.UserId,
-        email: user.UserEmail,
-        pseudo: user.UserPseudo,
+      const accessToken = this.generateAccessToken({
+        id: userDB.UserId,
+        email: userDB.UserEmail,
       });
-      const RefreshToken = this.generateRefreshToken({
-        id: user.UserId,
-        email: user.UserEmail,
-        pseudo: user.UserPseudo,
+      const refreshToken = this.generateRefreshToken({
+        id: userDB.UserId,
+        email: userDB.UserEmail,
       });
 
       return {
         success: true,
-        AccessToken,
-        RefreshToken,
+        message: "Successfully logged in",
+        accessToken,
+        refreshToken,
         user: {
           id: userDB.UserId,
           email: userDB.UserEmail,
-          pseudo: userDB.UserPseudo,
         },
       };
     } catch (error) {
@@ -179,13 +177,11 @@ class AuthService {
       const accessToken = this.generateAccessToken({
         id: newUser.UserId,
         email: newUser.UserEmail,
-        pseudo: newUser.UserPseudo,
       });
 
       const refreshToken = this.generateRefreshToken({
         id: newUser.UserId,
         email: newUser.UserEmail,
-        pseudo: newUser.UserPseudo,
       });
 
       return {
@@ -195,8 +191,8 @@ class AuthService {
         user: {
           id: newUser.UserId,
           email: newUser.UserEmail,
-          pseudo: newUser.UserPseudo,
         },
+        message: "Successfully registered",
       };
     } catch (error) {
       // Prisma error code for unique constraint violation
@@ -215,19 +211,12 @@ class AuthService {
 
   async RefreshToken(token) {
     try {
-      const decoded = this.verifyToken(token);
+      const decoded = this.verifyRefreshToken(token);
       if (!decoded) {
-        return {
-          success: false,
-          code: 401,
-          message: "Invalid or expired token",
-        };
+        throw new Error("Unautorized access");
       }
-
-      const newToken = this.generateToken(decoded);
       return {
         success: true,
-        token: newToken,
       };
     } catch (error) {
       return {

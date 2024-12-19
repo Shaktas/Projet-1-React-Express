@@ -21,7 +21,6 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Set-Cookie"],
   })
 );
 
@@ -35,7 +34,5 @@ app.listen(PORT, () => {
 app.get("/user/:id", async (req, res) => {
   const id = req.params.id;
   const user = await getUserById(id);
-  console.log(user);
-
   res.json(user);
 });

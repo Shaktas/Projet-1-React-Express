@@ -6,30 +6,35 @@ export const isAuthenticated = (req, res, next) => {
   if (!token) {
     return res
       .status(401)
-      .json({ success: false, message: "Authentication token required" });
+      .json({ success: false, message: "Unautorized access" });
   }
 
-  const decoded = AuthService.verifyToken(token);
+  const decoded = AuthService.verifyAccessToken(token);
+  console.log(decoded);
 
   if (!decoded) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    return res.status(401).json({ message: "Unautorized access" });
   }
 
   req.user = decoded;
   next();
 };
 
-export const refreshToken = async (req, res) => {
+export const refreshToken = async (req, res, next) => {
   try {
-    const { refresh } = req.cookies;
-    const decoded = AuthService.verifyRefreshToken(refresh);
+    if (req.cookies.jwt) {
+      const decodedJwt = AuthService.verifyAccessToken(req.cookies.jwt);
+      if (decodedJwt) {
+        res.status(200).json({ success: true, message: "Autorized access" });
+      }
+    } else {
+      const { refresh } = req.cookies;
+      const decoded = AuthService.verifyRefreshToken(refresh);
 
-    if (!decoded) {
-      throw new Error("Invalid or expired token");
+      req.user = decoded;
+      next();
     }
-    req.user = decoded;
-    next();
   } catch (error) {
-    return res.status(401).json({ message: error.message });
+    res.status(401).json({ message: error.message });
   }
 };

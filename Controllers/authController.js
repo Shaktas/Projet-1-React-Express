@@ -1,3 +1,4 @@
+import { config } from "dotenv";
 import authService from "../Services/authService.js";
 
 export const register = async (req, res) => {
@@ -6,26 +7,30 @@ export const register = async (req, res) => {
     UserEmail: req.body.email,
     UserPassword: req.body.pwd,
   };
-  const auth = await authService.register(userData);
+  try {
+    const auth = await authService.register(userData);
 
-  if (auth.success) {
-    // Set HTTP-only cookie
-    res.cookie("jwt", auth.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 10 * 60 * 1000,
-    });
+    if (auth.success) {
+      // Set HTTP-only cookie
+      res.cookie("jwt", auth.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 10 * 60 * 1000,
+      });
 
-    res.json({
-      success: true,
-      user: {
-        id: auth.user.id,
-        email: auth.user.email,
-      },
-    });
-  } else {
-    res.json(auth);
+      res.json({
+        success: true,
+        user: {
+          id: auth.user.id,
+          email: auth.user.email,
+        },
+      });
+    } else {
+      res.json(auth);
+    }
+  } catch (error) {
+    res.send(error.message);
   }
 };
 
@@ -36,19 +41,17 @@ export const login = async (req, res) => {
   };
 
   const auth = await authService.login(userData);
-  console.log(auth);
 
   if (auth.success) {
-    // Set HTTP-only cookie
     res.cookie("jwt", auth.accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: config.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 10 * 60 * 1000,
     });
     res.cookie("refresh", auth.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: config.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 60 * 60 * 1000,
     });
@@ -66,18 +69,21 @@ export const login = async (req, res) => {
   }
 };
 
-export const Refresh = async (req, res) => {
+export const refresh = async (req, res) => {
   const user = req.user;
+  console.log(user);
 
-  const token = authService.generateToken({
-    UserId: user.UserId,
-    UserEmail: user.UserEmail,
+  const token = authService.generateAccessToken({
+    UserId: user.id,
+    UserEmail: user.email,
   });
 
   res.cookie("jwt", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 10 * 60 * 1000,
+    maxAge: 60 * 60 * 1000,
   });
+
+  res.send({ success: true });
 };
