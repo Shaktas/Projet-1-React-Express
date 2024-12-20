@@ -14,44 +14,57 @@ datasource db {
 }
 
 model User {
-  UserId        Int        @id @default(autoincrement())
-  UserPseudo    String
-  UserEmail     String     @unique
-  UserPassword  String
-  UserCreatedAt DateTime   @default(now())
-  UserUpdatedAt DateTime   @updatedAt
-  Vault         Vault[]
-  Posseder      Posseder[]
+  userId        Int            @id @default(autoincrement())
+  userPseudo    String
+  userEmail     String         @unique
+  userPassword  String
+  userCreatedAt DateTime       @default(now())
+  userUpdatedAt DateTime       @updatedAt
+  vault         Vault[]
+  refresh       RefreshToken[]
+  posseder      Posseder[]
 }
 
 model Vault {
-  VaultId        Int        @id @default(autoincrement())
-  VaultName      String
-  VaultCreatedAt DateTime   @default(now())
-  VaultUpdatedAt DateTime   @updatedAt
-  UserId         Int
-  User           User       @relation(fields: [UserId], references: [UserId])
-  Card           Card[]
-  Posseder       Posseder[]
+  vaultId        Int        @id @default(autoincrement())
+  vaultName      String
+  vaultCreatedAt DateTime   @default(now())
+  vaultUpdatedAt DateTime   @updatedAt
+  userId         Int
+  user           User       @relation(fields: [userId], references: [userId])
+  card           Card[]
+  posseder       Posseder[]
 }
 
 model Card {
-  CardId        Int      @id @default(autoincrement())
-  CardTitle     String
-  CardLogin     String
-  CardPassword  String
-  CardUrl       String
-  CardCreatedAt DateTime @default(now())
-  CardUpdatedAt DateTime @updatedAt
-  Vault         Vault    @relation(fields: [VaultId], references: [VaultId])
-  VaultId       Int
+  cardId        Int      @id @default(autoincrement())
+  cardTitle     String
+  cardLogin     String
+  cardPassword  String
+  cardUrl       String
+  cardCreatedAt DateTime @default(now())
+  cardUpdatedAt DateTime @updatedAt
+  vault         Vault    @relation(fields: [vaultId], references: [vaultId])
+  vaultId       Int
+}
+
+model RefreshToken {
+  refreshId        String    @id @default(uuid())
+  refreshToken     String    @unique
+  userId           Int
+  user             User      @relation(fields: [userId], references: [userId])
+  refreshIssuedAt  DateTime  @default(now())
+  refreshExpiresAt DateTime
+  refreshRevokedAt DateTime?
+
+  @@index([userId])
 }
 
 model Posseder {
-  VaultId Int
-  UserId  Int
-  Vault   Vault @relation(fields: [VaultId], references: [VaultId])
-  User    User  @relation(fields: [UserId], references: [UserId])
+  vaultId Int
+  userId  Int
+  vault   Vault @relation(fields: [vaultId], references: [vaultId])
+  user    User  @relation(fields: [userId], references: [userId])
 
-  @@id([VaultId, UserId])
+  @@id([vaultId, userId])
 }

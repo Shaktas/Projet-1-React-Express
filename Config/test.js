@@ -1,6 +1,7 @@
 // import { config } from "./env.js";
 // // import AuthService from "../Services/authSercice.js";
 import crypto from "crypto";
+import bcrypt from "bcrypt";
 
 // const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
 //   modulusLength: 2048,
@@ -14,5 +15,5 @@ import crypto from "crypto";
 //   },
 // });
 // console.log(privateKey, publicKey);
-const cle = crypto.randomBytes(40).toString("hex");
-console.log(cle);
+const generateHash = async () => await bcrypt.hash("T1VK'9p!K9%VQ*`%", 10);
+generateHash().then((hash) => console.log(hash));

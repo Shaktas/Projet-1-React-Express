@@ -112,11 +112,11 @@ class AuthService {
    */
   async login(user) {
     try {
-      const userDB = await getUserByEmail(user.UserEmail);
+      const userDB = await getUserByEmail(user.userEmail);
 
       const isValidPassword = await this.verifyPassword(
-        user.UserPassword,
-        userDB.UserPassword
+        user.userPassword,
+        userDB.userPassword
       );
 
       if (!isValidPassword || !userDB) {
@@ -124,12 +124,12 @@ class AuthService {
       }
 
       const accessToken = this.generateAccessToken({
-        id: userDB.UserId,
-        email: userDB.UserEmail,
+        id: userDB.userId,
+        email: userDB.userEmail,
       });
       const refreshToken = this.generateRefreshToken({
-        id: userDB.UserId,
-        email: userDB.UserEmail,
+        id: userDB.userId,
+        email: userDB.userEmail,
       });
 
       return {
@@ -158,9 +158,9 @@ class AuthService {
   async register(userData) {
     try {
       if (
-        !userData.UserEmail ||
-        !userData.UserPassword ||
-        !userData.UserPseudo
+        !userData.userEmail ||
+        !userData.userPassword ||
+        !userData.userPseudo
       ) {
         throw new Error("Missing required fields");
       }
@@ -170,18 +170,18 @@ class AuthService {
       const newUser = await createUser({
         data: {
           ...userData,
-          UserPassword: hashedPassword,
+          userPassword: hashedPassword,
         },
       });
 
       const accessToken = this.generateAccessToken({
-        id: newUser.UserId,
-        email: newUser.UserEmail,
+        id: newUser.userId,
+        email: newUser.userEmail,
       });
 
       const refreshToken = this.generateRefreshToken({
-        id: newUser.UserId,
-        email: newUser.UserEmail,
+        id: newUser.userId,
+        email: newUser.userEmail,
       });
 
       return {
@@ -189,8 +189,8 @@ class AuthService {
         accessToken,
         refreshToken,
         user: {
-          id: newUser.UserId,
-          email: newUser.UserEmail,
+          id: newUser.userId,
+          email: newUser.userEmail,
         },
         message: "Successfully registered",
       };
@@ -217,6 +217,7 @@ class AuthService {
       }
       return {
         success: true,
+        id: decoded.id,
       };
     } catch (error) {
       return {

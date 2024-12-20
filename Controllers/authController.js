@@ -36,8 +36,8 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   const userData = {
-    UserEmail: req.body.email,
-    UserPassword: req.body.pwd,
+    userEmail: req.body.email,
+    userPassword: req.body.pwd,
   };
 
   const auth = await authService.login(userData);
@@ -70,20 +70,27 @@ export const login = async (req, res) => {
 };
 
 export const refresh = async (req, res) => {
-  const user = req.user;
-  console.log(user);
+  try {
+    const user = req.user;
 
-  const token = authService.generateAccessToken({
-    UserId: user.id,
-    UserEmail: user.email,
-  });
+    if (!user) {
+      throw new Error("Unauthorized access");
+    }
 
-  res.cookie("jwt", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 60 * 60 * 1000,
-  });
+    const token = authService.generateAccessToken({
+      userId: user.id,
+      userEmail: user.email,
+    });
 
-  res.send({ success: true });
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000,
+    });
+
+    res.send({ success: true, id: user.id });
+  } catch (error) {
+    res.send({ success: false, message: error.message });
+  }
 };

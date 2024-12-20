@@ -8,21 +8,21 @@ async function getAllUsers() {
 }
 async function getUserById(id) {
   const getUserById = await prisma.user.findUnique({
-    where: { UserId: parseInt(id) },
+    where: { userId: parseInt(id) },
   });
   return getUserById;
 }
 
 async function getUserByEmail(email) {
   const getUserByEmail = await prisma.user.findUnique({
-    where: { UserEmail: email },
+    where: { userEmail: email },
   });
   return getUserByEmail;
 }
 
 async function getVaultsByUserId(id) {
   const getVaultsByUserId = await prisma.user.findUnique({
-    where: { UserId: parseInt(id) },
+    where: { userId: parseInt(id) },
     include: { Vault: true },
   });
   return getVaultsByUserId;
@@ -35,7 +35,7 @@ async function createUser(userData) {
 
 async function updateUser(id, userData) {
   const updatedUser = await prisma.user.update({
-    where: { UserId: parseInt(id) },
+    where: { userId: parseInt(id) },
     data: userData,
   });
   return updatedUser;
@@ -43,7 +43,7 @@ async function updateUser(id, userData) {
 
 async function deleteUser(id) {
   const deletedUser = await prisma.user.delete({
-    where: { UserId: parseInt(id) },
+    where: { userId: parseInt(id) },
   });
   return deletedUser;
 }
