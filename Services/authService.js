@@ -138,8 +138,8 @@ class AuthService {
         accessToken,
         refreshToken,
         user: {
-          id: userDB.UserId,
-          email: userDB.UserEmail,
+          id: userDB.userId,
+          email: userDB.userEmail,
         },
       };
     } catch (error) {
