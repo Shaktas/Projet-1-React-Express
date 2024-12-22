@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import path from "path";
 import { config } from "../Config/env.js";
 import { createUser, getUserByEmail } from "../Repositories/userRepository.js";
+import { createSaveRefreshToken } from "../Repositories/authRepository.js";
 
 const algorithm = "RS256";
 
@@ -75,7 +76,7 @@ class AuthService {
   generateRefreshToken(payload) {
     return jwt.sign(payload, this.refreshKey, {
       algorithm: "HS256",
-      expiresIn: "1d",
+      expiresIn: "60m",
     });
   }
   /**
@@ -105,6 +106,35 @@ class AuthService {
   }
 
   /**
+   * Saves a refresh token in the database with an expiration date of 6 hours
+   * @param {integer} id - The user ID
+   * @param {string} refreshToken - The refresh token to be saved
+   * @returns {Promise<Object>} The saved token object if successful, or an error object if failed
+   * @throws {Error} When the token fails to save
+   */
+  async saveRefreshToken(id, refreshToken) {
+    const date = new Date();
+    date.setHours(date.getHours() + 6);
+    const expiresIn = date.toISOString();
+    try {
+      const saveToken = await createSaveRefreshToken(
+        id,
+        refreshToken,
+        expiresIn
+      );
+      if (!saveToken) {
+        throw new Error("Failed to save refresh token");
+      }
+      return saveToken;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  /**
    * Login user and generate token
    * @param {Object} user - User data from Login form
    * @param {string} password - Plain text password
@@ -127,10 +157,26 @@ class AuthService {
         id: userDB.userId,
         email: userDB.userEmail,
       });
+
+      if (!accessToken) {
+        throw new Error("Failed to generate access token");
+      }
+
       const refreshToken = this.generateRefreshToken({
         id: userDB.userId,
         email: userDB.userEmail,
       });
+
+      if (!refreshToken) {
+        throw new Error("Failed to generate refresh token");
+      }
+
+      const saveToken = await this.saveRefreshToken(
+        userDB.userId,
+        refreshToken
+      );
+
+      console.log(saveToken);
 
       return {
         success: true,
@@ -209,6 +255,12 @@ class AuthService {
     }
   }
 
+  /**
+   * Refreshes an authentication token by verifying and decoding it
+   * @param {string} token - The refresh token to verify
+   * @returns {Promise<{success: boolean, id?: string, message?: string}>} Object containing success status and either user id or error message
+   * @throws {Error} When token verification fails or access is unauthorized
+   */
   async RefreshToken(token) {
     try {
       const decoded = this.verifyRefreshToken(token);

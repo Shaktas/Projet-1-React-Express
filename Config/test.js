@@ -15,5 +15,13 @@ import bcrypt from "bcrypt";
 //   },
 // });
 // console.log(privateKey, publicKey);
-const generateHash = async () => await bcrypt.hash("T1VK'9p!K9%VQ*`%", 10);
-generateHash().then((hash) => console.log(hash));
+
+// const refreshKey = crypto.randomBytes(64).toString("hex");
+// console.log(refreshKey);
+
+// const generateHash = async () => await bcrypt.hash("T1VK'9p!K9%VQ*`%", 10);
+// generateHash().then((hash) => console.log(hash));
+
+const date = new Date();
+const isoDate = date.toISOString();
+console.log(isoDate);

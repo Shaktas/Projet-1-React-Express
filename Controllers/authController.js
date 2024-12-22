@@ -39,33 +39,39 @@ export const login = async (req, res) => {
     userEmail: req.body.email,
     userPassword: req.body.pwd,
   };
+  try {
+    const auth = await authService.login(userData);
 
-  const auth = await authService.login(userData);
+    if (auth.success) {
+      res.cookie("jwt", auth.accessToken, {
+        httpOnly: true,
+        secure: config.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 10 * 60 * 1000,
+      });
+      res.cookie("refresh", auth.refreshToken, {
+        httpOnly: true,
+        secure: config.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 1000,
+      });
 
-  if (auth.success) {
-    res.cookie("jwt", auth.accessToken, {
-      httpOnly: true,
-      secure: config.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 10 * 60 * 1000,
-    });
-    res.cookie("refresh", auth.refreshToken, {
-      httpOnly: true,
-      secure: config.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 1000,
-    });
-
+      res.json({
+        success: true,
+        message: "Successfully logged in",
+        user: {
+          id: auth.user.id,
+          email: auth.user.email,
+        },
+      });
+    } else {
+      throw new Error("Authentication failed");
+    }
+  } catch (error) {
     res.json({
-      success: true,
-      message: "Successfully logged in",
-      user: {
-        id: auth.user.id,
-        email: auth.user.email,
-      },
+      success: false,
+      message: error.message,
     });
-  } else {
-    res.json(auth);
   }
 };
 
@@ -86,7 +92,7 @@ export const refresh = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 60 * 60 * 1000,
+      maxAge: 10 * 60 * 1000,
     });
 
     res.send({ success: true, id: user.id });

@@ -49,10 +49,10 @@ model Card {
 }
 
 model RefreshToken {
-  refreshId        String    @id @default(uuid())
+  refreshId        Int       @id @default(autoincrement())
   refreshToken     String    @unique
   userId           Int
-  user             User      @relation(fields: [userId], references: [userId])
+  user             User      @relation(fields: [userId], references: [userId], onDelete: Cascade)
   refreshIssuedAt  DateTime  @default(now())
   refreshExpiresAt DateTime
   refreshRevokedAt DateTime?

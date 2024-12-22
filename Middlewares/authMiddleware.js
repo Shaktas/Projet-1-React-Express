@@ -24,12 +24,11 @@ export const refreshToken = async (req, res, next) => {
   try {
     if (req.cookies.jwt) {
       const decodedJwt = AuthService.verifyAccessToken(req.cookies.jwt);
-      console.log(decodedJwt);
 
       if (decodedJwt) {
         res.status(200).json({
           success: true,
-          id: decodedJwt.UserId,
+          id: decodedJwt.userId,
           message: "Autorized access",
         });
       }
