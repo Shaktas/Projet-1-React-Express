@@ -100,3 +100,33 @@ export const refresh = async (req, res) => {
     res.send({ success: false, message: error.message });
   }
 };
+
+export const logout = async (req, res) => {
+  try {
+    const { jwt, refresh } = req.cookies;
+    const userId = req.user.id;
+
+    if (!refresh && !jwt) {
+      throw new Error("Already Logout");
+    }
+
+    const clear = await authService.logout(userId, refresh);
+
+    if (!clear.success) {
+      throw new Error("Logout failed");
+    }
+
+    res.clearCookie("jwt");
+    res.clearCookie("refresh");
+
+    res.json({
+      success: true,
+      message: "Successfully logged out",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

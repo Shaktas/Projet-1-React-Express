@@ -1,4 +1,9 @@
-import { register, login, refresh } from "../Controllers/authController.js";
+import {
+  register,
+  login,
+  refresh,
+  logout,
+} from "../Controllers/authController.js";
 import express from "express";
 import {
   isAuthenticated,
@@ -10,6 +15,8 @@ const router = express.Router();
 router.post("/register", register);
 
 router.post("/login", login);
+
+router.post("/logout", isAuthenticated, logout);
 
 router.post("/verify", isAuthenticated, (req, res) => {
   res.send({ success: true });

@@ -4,7 +4,10 @@ import jwt from "jsonwebtoken";
 import path from "path";
 import { config } from "../Config/env.js";
 import { createUser, getUserByEmail } from "../Repositories/userRepository.js";
-import { createSaveRefreshToken } from "../Repositories/authRepository.js";
+import {
+  createRefreshToken,
+  updateRefreshTokenEnd,
+} from "../Repositories/authRepository.js";
 
 const algorithm = "RS256";
 
@@ -114,14 +117,10 @@ class AuthService {
    */
   async saveRefreshToken(id, refreshToken) {
     const date = new Date();
-    date.setHours(date.getHours() + 6);
+    date.setHours(date.getHours() + 1);
     const expiresIn = date.toISOString();
     try {
-      const saveToken = await createSaveRefreshToken(
-        id,
-        refreshToken,
-        expiresIn
-      );
+      const saveToken = await createRefreshToken(id, refreshToken, expiresIn);
       if (!saveToken) {
         throw new Error("Failed to save refresh token");
       }
@@ -225,10 +224,23 @@ class AuthService {
         email: newUser.userEmail,
       });
 
+      if (!accessToken) {
+        throw new Error("Failed to generate access token");
+      }
+
       const refreshToken = this.generateRefreshToken({
         id: newUser.userId,
         email: newUser.userEmail,
       });
+
+      if (!refreshToken) {
+        throw new Error("Failed to generate refresh token");
+      }
+
+      const saveToken = await this.saveRefreshToken(
+        newUser.userId,
+        refreshToken
+      );
 
       return {
         success: true,
@@ -248,6 +260,29 @@ class AuthService {
           message: "Email already exists",
         };
       }
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  async logout(id, token) {
+    try {
+      const date = new Date();
+      const revoked = date.toISOString();
+
+      const data = updateRefreshTokenEnd(id, token, revoked);
+
+      if (!data) {
+        throw new Error("Error server");
+      }
+
+      return {
+        success: true,
+        message: "Logout successfuly",
+      };
+    } catch (error) {
       return {
         success: false,
         message: error.message,
