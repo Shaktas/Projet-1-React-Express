@@ -8,35 +8,82 @@ import {
   createRefreshToken,
   updateRefreshTokenEnd,
 } from "../Repositories/authRepository.js";
+import encryptService from "../Services/encryptionService.js";
 
 const algorithm = "RS256";
 
+/**
+ * Service handling authentication-related operations including user registration, login, and token management.
+ * Implements the Singleton pattern to ensure only one instance exists.
+ *
+ * @class AuthService
+ * @description Manages JWT-based authentication with access and refresh tokens, password hashing, and user session handling.
+ *
+ * @property {AuthService|null} instance - Singleton instance of the AuthService
+ * @property {string|null} privateKey - Private key for signing JWT access tokens
+ * @property {string|null} publicKey - Public key for verifying JWT access tokens
+ * @property {string|null} refreshKey - Secret key for signing and verifying refresh tokens
+ *
+ * @throws {Error} When JWT keys fail to load during initialization
+ *
+ * @example
+ * // Use authService to handle authentication operations
+ * const loginResult = await authService.login(userData);
+ */
 class AuthService {
-  privateKey = null;
-  publicKey = null;
-  refreshKey = null;
+  static instance = null;
+  #privateKey = null;
+  #publicKey = null;
+  #refreshKey = null;
 
   constructor() {
+    if (AuthService.instance) {
+      return AuthService.instance;
+    }
+    AuthService.instance = this;
     this.initializeKeys();
   }
 
+  /**
+   * Initialize JWT keys by reading them from the file system
+   * @returns {Promise<void>}
+   * @throws {Error} When the keys fail to load
+   */
   async initializeKeys() {
     try {
-      this.privateKey = await fs.readFile(
-        path.resolve(config.jwt.private),
-        "utf8"
-      );
-      this.publicKey = await fs.readFile(
-        path.resolve(config.jwt.public),
-        "utf8"
-      );
-      this.refreshKey = await fs.readFile(
-        path.resolve(config.jwt.refresh),
-        "utf8"
-      );
+      if (!this.#privateKey) {
+        await this.loadPrivateKey();
+      }
+      if (!this.#publicKey) {
+        await this.loadPublicKey();
+      }
+      if (!this.#refreshKey) {
+        await this.loadRefreshKey();
+      }
     } catch (error) {
-      throw new Error("Failed to load JWT keys");
+      throw new Error(`Failed to load JWT keys: ${error.message}`);
     }
+  }
+
+  async loadPrivateKey() {
+    this.#privateKey = await fs.readFile(
+      path.resolve(config.jwt.private),
+      "utf8"
+    );
+  }
+
+  async loadPublicKey() {
+    this.#publicKey = await fs.readFile(
+      path.resolve(config.jwt.public),
+      "utf8"
+    );
+  }
+
+  async loadRefreshKey() {
+    this.#refreshKey = await fs.readFile(
+      path.resolve(config.jwt.refresh),
+      "utf8"
+    );
   }
 
   /**
@@ -60,28 +107,30 @@ class AuthService {
   }
 
   /**
-   * Generate JWT access token
-   * @param {Object} payload - Data to encode in token
-   * @returns {string} JWT access token
+   * Generates a JSON Web Token (JWT) access token
+   * @param {Object} payload - The data to be encoded in the token
+   * @returns {string} The signed JWT access token, valid for 10 minutes
+   * @throws {Error} If token signing fails
    */
   generateAccessToken(payload) {
-    return jwt.sign(payload, this.privateKey, {
+    return jwt.sign(payload, this.#privateKey, {
       algorithm: "RS256",
       expiresIn: "10m",
     });
   }
 
   /**
-   * Generate JWT refresh token
-   * @param {Object} payload - Data to encode in token
-   * @returns {string} JWT refresh token
+   * Generates a JSON Web Token (JWT) refresh token.
+   * @param {Object} payload - The data to be encoded in the token.
+   * @returns {string} A JWT refresh token signed with HS256 algorithm, valid for 60 minutes.
    */
   generateRefreshToken(payload) {
-    return jwt.sign(payload, this.refreshKey, {
+    return jwt.sign(payload, this.#refreshKey, {
       algorithm: "HS256",
       expiresIn: "60m",
     });
   }
+
   /**
    * Verify JWT acccess token
    * @param {string} token - JWT token to verify
@@ -89,7 +138,7 @@ class AuthService {
    */
   verifyAccessToken(token) {
     try {
-      return jwt.verify(token, this.publicKey, { algorithms: ["RS256"] });
+      return jwt.verify(token, this.#publicKey, { algorithms: ["RS256"] });
     } catch (error) {
       return null;
     }
@@ -102,14 +151,14 @@ class AuthService {
    */
   verifyRefreshToken(token) {
     try {
-      return jwt.verify(token, this.refreshKey, { algorithms: ["HS256"] });
+      return jwt.verify(token, this.#refreshKey, { algorithms: ["HS256"] });
     } catch (error) {
       return null;
     }
   }
 
   /**
-   * Saves a refresh token in the database with an expiration date of 6 hours
+   * Saves a refresh token in the database with an expiration date of 1 hours
    * @param {integer} id - The user ID
    * @param {string} refreshToken - The refresh token to be saved
    * @returns {Promise<Object>} The saved token object if successful, or an error object if failed
@@ -149,7 +198,7 @@ class AuthService {
       );
 
       if (!isValidPassword || !userDB) {
-        throw new Error("Conexion failed");
+        throw new Error("Connection failed");
       }
 
       const accessToken = this.generateAccessToken({
@@ -174,8 +223,6 @@ class AuthService {
         userDB.userId,
         refreshToken
       );
-
-      console.log(saveToken);
 
       return {
         success: true,
@@ -209,15 +256,25 @@ class AuthService {
       ) {
         throw new Error("Missing required fields");
       }
+      const hashedPassword = await this.hashPassword(userData.userPassword);
 
-      const hashedPassword = await this.hashPassword(userData.UserPassword);
+      const userObj = {
+        ...userData,
+        userPassword: hashedPassword,
+      };
 
-      const newUser = await createUser({
-        data: {
-          ...userData,
-          userPassword: hashedPassword,
-        },
-      });
+      const { encryptedData, encipher } = await encryptService.encrypt(
+        userObj,
+        hashedPassword
+      );
+
+      const userDataEncripted = {
+        ...encryptedData,
+        userEncrypted: encipher,
+      };
+      console.log(userDataEncripted);
+
+      const newUser = await createUser(userDataEncripted);
 
       const accessToken = this.generateAccessToken({
         id: newUser.userId,
@@ -267,44 +324,26 @@ class AuthService {
     }
   }
 
+  /**
+   * Logs out a user by revoking their refresh token
+   * @param {string} id - The user ID
+   * @param {string} token - The refresh token to revoke
+   * @returns {Promise<Object>} Object containing success status and message
+   * @throws {Error} If server error occurs during token revocation
+   */
   async logout(id, token) {
     try {
       const date = new Date();
       const revoked = date.toISOString();
+      const data = await updateRefreshTokenEnd(id, token, revoked);
 
-      const data = updateRefreshTokenEnd(id, token, revoked);
-
-      if (!data) {
+      if (data === null || data === undefined) {
         throw new Error("Error server");
       }
 
       return {
         success: true,
-        message: "Logout successfuly",
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message,
-      };
-    }
-  }
-
-  /**
-   * Refreshes an authentication token by verifying and decoding it
-   * @param {string} token - The refresh token to verify
-   * @returns {Promise<{success: boolean, id?: string, message?: string}>} Object containing success status and either user id or error message
-   * @throws {Error} When token verification fails or access is unauthorized
-   */
-  async RefreshToken(token) {
-    try {
-      const decoded = this.verifyRefreshToken(token);
-      if (!decoded) {
-        throw new Error("Unautorized access");
-      }
-      return {
-        success: true,
-        id: decoded.id,
+        message: "Logout successfully",
       };
     } catch (error) {
       return {
@@ -315,4 +354,5 @@ class AuthService {
   }
 }
 
-export default new AuthService();
+const authService = new AuthService();
+export default authService;

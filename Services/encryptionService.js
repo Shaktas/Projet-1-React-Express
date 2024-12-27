@@ -1,32 +1,128 @@
 import crypto from "crypto";
-import { config } from "./env.js";
+import { config } from "../Config/env.js";
+import { getEncryptedData } from "../Repositories/encryptionRepository.js";
 import fs from "fs/promises";
 
-const algorithm = "aes-256-gcm";
-const secretKey = fs.readFileSync(config.aes.key, "utf8");
+/**
+ * Service for handling encryption and decryption operations using AES-256-GCM.
+ * @class
+ * @description Provides methods for encrypting and decrypting data using AES-256-GCM with salt and initialization vectors.
+ * The service uses a combination of a secret key and optional user password for enhanced security.
+ * @property {number} IV_LENGTH - The length of the initialization vector used in encryption (12 bytes)
+ * @property {string} #secretKey - Private property storing the secret key loaded from configuration
+ */
+class EncryptionService {
+  static IV_LENGTH = 12;
+  #secretKey = null;
 
-// A comprendre
-function encrypt(text) {
-  const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv(
-    algorithm,
-    Buffer.from(secretKey, "hex"),
-    iv
-  );
-  let encrypted = cipher.update(text, "utf8", "hex");
-  encrypted += cipher.final("hex");
-  const authTag = cipher.getAuthTag();
-  return { encrypted, iv: iv.toString("hex"), tag: authTag.toString("hex") };
+  constructor() {
+    this.loadSecretKey();
+  }
+
+  async loadSecretKey() {
+    if (!this.#secretKey) {
+      this.#secretKey = await fs.readFile(config.aes.key, "utf8");
+    }
+  }
+
+  /**
+   * Generates a random salt using crypto.randomBytes
+   * @returns {string} A 32-character hexadecimal string representing a 16-byte random salt
+   */
+  randomSalt() {
+    return crypto.randomBytes(16).toString("hex");
+  }
+
+  /**
+   * Encrypts text using AES-256-GCM encryption with a derived key.
+   * @async
+   * @param {object} texts - The object of texts to encrypt
+   * @param {string|number} id - The identifier associated with the encryption
+   * @param {object} db - The database instance
+   * @param {string} [userPassword=""] - Optional user password to strengthen encryption
+   * @returns {Promise<{
+   *   encryptedData: string,
+   *   iv: string,
+   *   tag: string,
+   *   salt: string
+   * }|null>} Object containing encrypted data and associated parameters, or null if encryption fails
+   * @throws {Error} If encryption process fails
+   */
+  async encrypt(texts, userPassword = "") {
+    try {
+      const randomSalt = this.randomSalt();
+
+      const combinedKey = crypto.pbkdf2Sync(
+        this.#secretKey + userPassword,
+        randomSalt,
+        100000,
+        32,
+        "sha256"
+      );
+
+      const iv = crypto.randomBytes(EncryptionService.IV_LENGTH);
+
+      const cipher = crypto.createCipheriv("aes-256-gcm", combinedKey, iv);
+
+      // Créer un objet pour stocker les textes cryptés et leurs authTags
+      const encryptedTexts = {};
+      const authTags = {};
+
+      // Chiffrer chaque texte avec les mêmes paramètres
+      for (const [key, value] of Object.entries(texts)) {
+        const cipher = crypto.createCipheriv("aes-256-gcm", combinedKey, iv);
+        let encrypted = cipher.update(value.toString(), "utf8", "hex");
+        encrypted += cipher.final("hex");
+        authTags[key] = cipher.getAuthTag().toString("hex");
+
+        encryptedTexts[key] = encrypted;
+      }
+
+      return {
+        encryptedData: encryptedTexts,
+        encipher: {
+          iv: iv.toString("hex"),
+          tags: authTags,
+          salt: randomSalt,
+        },
+      };
+    } catch (error) {
+      console.error("Error occurred during encryption:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Decrypts data using AES-256-GCM algorithm
+   * @async
+   * @param {string} encrypted - The encrypted data in hexadecimal format
+   * @param {string} id - The identifier used to retrieve encryption metadata
+   * @param {string} db - Database connection name
+   * @param {string} [userPassword=""] - Optional user password for additional encryption layer
+   * @returns {Promise<string>} The decrypted data in UTF-8 format
+   * @throws {Error} If decryption fails or required metadata is missing
+   */
+  async decrypt(encrypted, id, db, userPassword = "") {
+    const { salt, iv, tag } = await getEncryptedData(db, id);
+
+    const combinedKey = crypto.pbkdf2Sync(
+      secretKey + userPassword,
+      salt,
+      100000,
+      32,
+      "sha256"
+    );
+
+    const decipher = crypto.createDecipheriv(
+      "aes-256-gcm",
+      combinedKey,
+      Buffer.from(iv, "hex")
+    );
+    decipher.setAuthTag(Buffer.from(tag, "hex"));
+    let decrypted = decipher.update(encrypted, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+    return decrypted;
+  }
 }
 
-function decrypt(encrypted, iv, tag) {
-  const decipher = crypto.createDecipheriv(
-    algorithm,
-    secretKey,
-    Buffer.from(iv, "hex")
-  );
-  decipher.setAuthTag(Buffer.from(tag, "hex"));
-  let decrypted = decipher.update(encrypted, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
-}
+export default new EncryptionService();

@@ -3,9 +3,9 @@ import authService from "../Services/authService.js";
 
 export const register = async (req, res) => {
   const userData = {
-    UserPseudo: req.body.pseudo,
-    UserEmail: req.body.email,
-    UserPassword: req.body.pwd,
+    userPseudo: req.body.pseudo,
+    userEmail: req.body.email,
+    userPassword: req.body.pwd,
   };
   try {
     const auth = await authService.register(userData);
