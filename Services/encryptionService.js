@@ -39,7 +39,7 @@ class EncryptionService {
    * @param {object} texts - The object of texts to encrypt
    * @param {string|number} id - The identifier associated with the encryption
    * @param {object} db - The database instance
-   * @param {string} [userPassword=""] - Optional user password to strengthen encryption
+   * @param {string} [userPassword=""] - user password to strengthen encryption
    * @returns {Promise<{
    *   encryptedData: string,
    *   iv: string,
@@ -48,7 +48,7 @@ class EncryptionService {
    * }|null>} Object containing encrypted data and associated parameters, or null if encryption fails
    * @throws {Error} If encryption process fails
    */
-  async encrypt(texts, userPassword = "") {
+  async encrypt(texts, userPassword) {
     try {
       const randomSalt = this.randomSalt();
 
@@ -70,6 +70,9 @@ class EncryptionService {
 
       // Chiffrer chaque texte avec les mêmes paramètres
       for (const [key, value] of Object.entries(texts)) {
+        if (key === "userPassword") {
+          continue;
+        }
         const cipher = crypto.createCipheriv("aes-256-gcm", combinedKey, iv);
         let encrypted = cipher.update(value.toString(), "utf8", "hex");
         encrypted += cipher.final("hex");
@@ -77,6 +80,8 @@ class EncryptionService {
 
         encryptedTexts[key] = encrypted;
       }
+
+      encryptedTexts.userPassword = userPassword;
 
       return {
         encryptedData: encryptedTexts,
@@ -95,33 +100,46 @@ class EncryptionService {
   /**
    * Decrypts data using AES-256-GCM algorithm
    * @async
-   * @param {string} encrypted - The encrypted data in hexadecimal format
+   * @param {objet} encrypted - The encrypted datas in hexadecimal format
    * @param {string} id - The identifier used to retrieve encryption metadata
    * @param {string} db - Database connection name
    * @param {string} [userPassword=""] - Optional user password for additional encryption layer
    * @returns {Promise<string>} The decrypted data in UTF-8 format
    * @throws {Error} If decryption fails or required metadata is missing
    */
-  async decrypt(encrypted, id, db, userPassword = "") {
-    const { salt, iv, tag } = await getEncryptedData(db, id);
+  async decrypt(encrypted, id, db) {
+    const userPassword = encrypted.userPassword;
+    const data = await getEncryptedData(db, id);
+    const { iv, tags, salt } = data[db + "Encrypted"];
+    let decrypted = "";
+    let decryptedObj = {};
+    console.log(salt);
 
     const combinedKey = crypto.pbkdf2Sync(
-      secretKey + userPassword,
+      this.#secretKey + userPassword,
       salt,
       100000,
       32,
       "sha256"
     );
 
-    const decipher = crypto.createDecipheriv(
-      "aes-256-gcm",
-      combinedKey,
-      Buffer.from(iv, "hex")
-    );
-    decipher.setAuthTag(Buffer.from(tag, "hex"));
-    let decrypted = decipher.update(encrypted, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-    return decrypted;
+    for (const [keyTags, tag] of Object.entries(tags)) {
+      for (const [keyEncrypted, value] of Object.entries(encrypted)) {
+        if (keyTags !== keyEncrypted) {
+          continue;
+        }
+        const decipher = crypto.createDecipheriv(
+          "aes-256-gcm",
+          combinedKey,
+          Buffer.from(iv, "hex")
+        );
+        decipher.setAuthTag(Buffer.from(tag, "hex"));
+        decrypted = decipher.update(value, "hex", "utf8");
+        decrypted += decipher.final("utf8");
+        Object.assign(decryptedObj, { [keyEncrypted]: decrypted });
+      }
+    }
+    return decryptedObj;
   }
 }
 

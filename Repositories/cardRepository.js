@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../prisma/prisma.js";
 
 async function getAllCards() {
   const cards = await prisma.card.findMany();

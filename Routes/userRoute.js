@@ -13,4 +13,4 @@ router.get("/:id", isAuthenticated, getOneUser);
 // router.post("/verify", isAuthenticated, (req, res) => {
 //   res.send({ success: true });
 // });
-// export default router;
+export default router;

@@ -2,7 +2,7 @@ import express, { json } from "express";
 import cors from "cors";
 import { register } from "./Controllers/authController.js";
 import authRoute from "./Routes/authRoute.js";
-// import userRoute from "./Routes/userRoute.js";
+import userRoute from "./Routes/userRoute.js";
 // import vaultRoute from "./Routes/vaultRoute.js";
 // import cardRoute from "./Routes/cardRoute.js";
 import { config } from "./Config/env.js";
@@ -25,14 +25,9 @@ app.use(
 );
 
 app.use("/", authRoute);
+app.use("/user", userRoute);
 
 const PORT = config.port;
 app.listen(PORT, () => {
   console.log(`Serveur Express sur le port ${PORT}`);
-});
-
-app.get("/user/:id", async (req, res) => {
-  const id = req.params.id;
-  const user = await getUserById(id);
-  res.json(user);
 });
