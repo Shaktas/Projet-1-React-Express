@@ -1,16 +1,18 @@
 import express from "express";
 import { isAuthenticated } from "../Middlewares/authMiddleware.js";
-import { getOneUser } from "../Controllers/userController.js";
+import {
+  getOneUser,
+  getUsers,
+  deleteOneUser,
+} from "../Controllers/userController.js";
 
-const router = express.Router();
+const usersRouter = express.Router();
+const userRouter = express.Router();
 
-router.get("/:id", isAuthenticated, getOneUser);
+usersRouter.get("/", isAuthenticated, getUsers);
+userRouter.get("/:id", isAuthenticated, getOneUser);
+userRouter.get("/:id/vault", isAuthenticated);
+userRouter.put("/:id/", isAuthenticated);
+userRouter.delete("/:id/", deleteOneUser);
 
-// router.post("/register", );
-
-// router.post("/login", login);
-
-// router.post("/verify", isAuthenticated, (req, res) => {
-//   res.send({ success: true });
-// });
-export default router;
+export { usersRouter, userRouter };

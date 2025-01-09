@@ -108,12 +108,11 @@ class EncryptionService {
    * @throws {Error} If decryption fails or required metadata is missing
    */
   async decrypt(encrypted, id, db) {
-    const userPassword = encrypted.userPassword;
+    const userPassword = encrypted.userPassword; // Récupérer le mot de passe de l'utilisateur avec prisma
     const data = await getEncryptedData(db, id);
     const { iv, tags, salt } = data[db + "Encrypted"];
     let decrypted = "";
     let decryptedObj = {};
-    console.log(salt);
 
     const combinedKey = crypto.pbkdf2Sync(
       this.#secretKey + userPassword,

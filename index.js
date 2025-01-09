@@ -1,8 +1,7 @@
 import express, { json } from "express";
 import cors from "cors";
-import { register } from "./Controllers/authController.js";
-import authRoute from "./Routes/authRoute.js";
-import userRoute from "./Routes/userRoute.js";
+import authRouter from "./Routes/authRoute.js";
+import { userRouter, usersRouter } from "./Routes/userRoute.js";
 // import vaultRoute from "./Routes/vaultRoute.js";
 // import cardRoute from "./Routes/cardRoute.js";
 import { config } from "./Config/env.js";
@@ -24,8 +23,9 @@ app.use(
   })
 );
 
-app.use("/", authRoute);
-app.use("/user", userRoute);
+app.use("/", authRouter);
+app.use("/users", usersRouter);
+app.use("/user", userRouter);
 
 const PORT = config.port;
 app.listen(PORT, () => {

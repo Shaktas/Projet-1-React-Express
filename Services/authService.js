@@ -272,7 +272,6 @@ class AuthService {
         ...encryptedData,
         userEncrypted: encipher,
       };
-      console.log(userDataEncripted);
 
       const newUser = await createUser(userDataEncripted);
 
