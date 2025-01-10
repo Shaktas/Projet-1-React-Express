@@ -15,7 +15,7 @@ export const getOneUser = async (req, res) => {
   const dataDeciphered = "";
   try {
     const data = await getUserById(id);
-    const dataDeciphered = await encryption.decrypt(data, id, DB);
+    const dataDeciphered = await encryption.decrypt(data, id, DB, "");
 
     res.status(200).send({ success: true, data: dataDeciphered });
   } catch (error) {
@@ -30,7 +30,12 @@ export const getUsers = async (req, res) => {
     const decryptedResults = {};
 
     for (const data of datas) {
-      const dataDeciphered = await encryption.decrypt(data, data.userId, DB);
+      const dataDeciphered = await encryption.decrypt(
+        data,
+        data.userId,
+        DB,
+        ""
+      );
       Object.assign(decryptedResults, { [data.userId]: dataDeciphered });
     }
 
@@ -52,7 +57,8 @@ export const getAllVaultsByUserId = async (req, res) => {
       const dataDeciphered = await encryption.decrypt(
         vault,
         vault.vaultId,
-        "vault"
+        "vault",
+        id
       );
       Object.assign(decryptedResults, { [vault.vaultId]: dataDeciphered });
     }

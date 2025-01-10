@@ -114,8 +114,14 @@ class EncryptionService {
    * @returns {Promise<string>} The decrypted data in UTF-8 format
    * @throws {Error} If decryption fails or required metadata is missing
    */
-  async decrypt(encrypted, id, db) {
-    const userPassword = encrypted.userPassword;
+  async decrypt(encrypted, id, db, userId) {
+    let userPassword = "";
+
+    if (db !== "user") {
+      userPassword = await getPwdUserbyId(userId);
+    } else {
+      userPassword = encrypted.userPassword;
+    }
     const data = await getEncryptedData(db, id);
 
     const { iv, tags, salt } = data[db + "Encrypted"];

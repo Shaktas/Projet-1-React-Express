@@ -20,7 +20,7 @@ vaultsRouter.get("/", isAuthenticated, getAllVaults);
 vaultRouter.get("/:id", isAuthenticated, getVaultById);
 vaultRouter.get("/:id/users", isAuthenticated, getVaultUsers);
 vaultRouter.get(":id/cards", isAuthenticated, getVaultCards);
-vaultRouter.post("/", isAuthenticated, createVault);
+vaultRouter.post("/", createVault);
 vaultRouter.post("/:id/card", isAuthenticated, createCardInVault);
 vaultRouter.put("/:id", isAuthenticated, updateVault);
 vaultRouter.put("/:id/card/:cardId", isAuthenticated, updateCardInVault);
