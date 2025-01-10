@@ -265,15 +265,16 @@ class AuthService {
 
       const { encryptedData, encipher } = await encryptService.encrypt(
         userObj,
+        "user",
         hashedPassword
       );
 
-      const userDataEncripted = {
+      const userDataEncrypted = {
         ...encryptedData,
         userEncrypted: encipher,
       };
 
-      const newUser = await createUser(userDataEncripted);
+      const newUser = await createUser(userDataEncrypted);
 
       const accessToken = this.generateAccessToken({
         id: newUser.userId,

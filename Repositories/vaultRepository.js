@@ -14,12 +14,20 @@ async function getVaultById(vaultId) {
   return getVaultById;
 }
 
-async function getCardsByVaultId(vaultId) {
+async function getVaultCards(vaultId) {
   const getCardsByVaultId = await prisma.vault.findUnique({
     where: { VaultId: parseInt(vaultId) },
     include: { Card: true },
   });
   return getCardsByVaultId;
+}
+
+async function getVaultUsers(vaultId) {
+  const getUsersByVaultId = await prisma.vault.findUnique({
+    where: { VaultId: parseInt(vaultId) },
+    include: { User: true },
+  });
+  return getUsersByVaultId;
 }
 
 async function getCardByVaultId(vaultId, cardId) {
@@ -43,7 +51,7 @@ async function createVault(vaultData) {
   return newVault;
 }
 
-async function createCardByVaultId(vaultId, cardData) {
+async function createCardInVault(vaultId, cardData) {
   const newCardVault = await prisma.vault.create({
     where: { VaultId: parseInt(vaultId) },
     include: {
@@ -60,7 +68,7 @@ async function updateVault(vaultId, vaultData) {
   });
   return updatedVault;
 }
-async function updateCardByVaultId(vaultId, cardId, cardData) {
+async function updateCardInVault(vaultId, cardId, cardData) {
   const updatedVault = await prisma.vault.update({
     where: { VaultId: parseInt(vaultId) },
     include: {
@@ -71,7 +79,7 @@ async function updateCardByVaultId(vaultId, cardId, cardData) {
   return updatedVault;
 }
 
-async function deleteCardByVaultId(vaultId, cardId) {
+async function deleteCardInVault(vaultId, cardId) {
   const deletedVault = await prisma.vault.delete({
     where: { VaultId: parseInt(vaultId) },
     include: {
@@ -91,11 +99,12 @@ async function deleteVault(id) {
 export {
   getAllVaults,
   getVaultById,
-  getCardsByVaultId,
+  getVaultCards,
+  getVaultUsers,
   createVault,
-  createCardByVaultId,
+  createCardInVault,
   updateVault,
-  updateCardByVaultId,
+  updateCardInVault,
   deleteVault,
-  deleteCardByVaultId,
+  deleteCardInVault,
 };

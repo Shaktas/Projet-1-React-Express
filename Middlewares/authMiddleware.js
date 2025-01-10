@@ -10,7 +10,6 @@ export const isAuthenticated = (req, res, next) => {
   }
 
   const decoded = AuthService.verifyAccessToken(token);
-  console.log(decoded);
 
   if (!decoded) {
     return res.status(401).json({ message: "Unautorized access" });

@@ -1,0 +1,18 @@
+meta {
+  name: add vault
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:4000/vault
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "vaultName" : "Test",
+    "userId" : 3
+  }
+}

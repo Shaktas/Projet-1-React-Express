@@ -1,9 +1,8 @@
 import prisma from "../prisma/prisma.js";
 
 export async function getEncryptedData(db, id) {
-  const dbName = db.charAt(0).toUpperCase() + db.slice(1);
-  const encryptedData = await prisma[dbName].findUnique({
-    where: { userId: parseInt(id) },
+  const encryptedData = await prisma[db].findUnique({
+    where: { [db + "Id"]: parseInt(id) },
     select: {
       [db + "Encrypted"]: true,
     },

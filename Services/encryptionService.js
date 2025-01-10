@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { config } from "../Config/env.js";
 import { getEncryptedData } from "../Repositories/encryptionRepository.js";
+import { getPwdUserbyId } from "../Repositories/userRepository.js";
 import fs from "fs/promises";
 
 /**
@@ -48,7 +49,11 @@ class EncryptionService {
    * }|null>} Object containing encrypted data and associated parameters, or null if encryption fails
    * @throws {Error} If encryption process fails
    */
-  async encrypt(texts, userPassword) {
+  async encrypt(texts, DB, userPassword = false) {
+    if (userPassword === false) {
+      userPassword = await getPwdUserbyId(texts.userId);
+      delete texts.userId;
+    }
     try {
       const randomSalt = this.randomSalt();
 
@@ -81,7 +86,9 @@ class EncryptionService {
         encryptedTexts[key] = encrypted;
       }
 
-      encryptedTexts.userPassword = userPassword;
+      if (DB === "user") {
+        encryptedTexts.userPassword = userPassword;
+      }
 
       return {
         encryptedData: encryptedTexts,
@@ -108,8 +115,9 @@ class EncryptionService {
    * @throws {Error} If decryption fails or required metadata is missing
    */
   async decrypt(encrypted, id, db) {
-    const userPassword = encrypted.userPassword; // Récupérer le mot de passe de l'utilisateur avec prisma
+    const userPassword = encrypted.userPassword;
     const data = await getEncryptedData(db, id);
+
     const { iv, tags, salt } = data[db + "Encrypted"];
     let decrypted = "";
     let decryptedObj = {};
@@ -127,6 +135,8 @@ class EncryptionService {
         if (keyTags !== keyEncrypted) {
           continue;
         }
+        console.log(keyTags, keyEncrypted);
+
         const decipher = crypto.createDecipheriv(
           "aes-256-gcm",
           combinedKey,
