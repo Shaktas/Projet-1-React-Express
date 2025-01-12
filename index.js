@@ -2,7 +2,7 @@ import express, { json } from "express";
 import cors from "cors";
 import authRouter from "./Routes/authRoute.js";
 import { userRouter, usersRouter } from "./Routes/userRoute.js";
-import { vaultRouter, vaultsRouter } from "./Routes/vaultRoute.js";
+import vaultRouter from "./Routes/vaultRoute.js";
 // import vaultRoute from "./Routes/vaultRoute.js";
 // import cardRoute from "./Routes/cardRoute.js";
 import { config } from "./Config/env.js";
@@ -27,7 +27,6 @@ app.use(
 app.use("/", authRouter);
 app.use("/users", usersRouter);
 app.use("/user", userRouter);
-app.use("/vaults", vaultsRouter);
 app.use("/vault", vaultRouter);
 
 const PORT = config.port;

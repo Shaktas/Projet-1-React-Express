@@ -54,6 +54,8 @@ class EncryptionService {
       userPassword = await getPwdUserbyId(texts.userId);
       delete texts.userId;
     }
+    console.log(texts);
+
     try {
       const randomSalt = this.randomSalt();
 
@@ -141,7 +143,6 @@ class EncryptionService {
         if (keyTags !== keyEncrypted) {
           continue;
         }
-        console.log(keyTags, keyEncrypted);
 
         const decipher = crypto.createDecipheriv(
           "aes-256-gcm",

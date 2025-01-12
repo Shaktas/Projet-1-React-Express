@@ -76,10 +76,16 @@ export const getAllCardsByUserId = async (req, res) => {
   try {
     const decryptedResults = {};
     const datas = await getCardsByUserId(id);
+    const cards = datas.card;
 
     for (const data of datas) {
-      const dataDeciphered = await encryption.decrypt(data, data.userId, DB);
-      Object.assign(decryptedResults, { [data.userId]: dataDeciphered });
+      const dataDeciphered = await encryption.decrypt(
+        cards,
+        cards.cardsId,
+        "card",
+        id
+      );
+      Object.assign(decryptedResults, { [cards.userId]: dataDeciphered });
     }
 
     res.status(200).send({ success: true, data: decryptedResults });

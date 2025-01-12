@@ -1,7 +1,6 @@
 import express from "express";
 import { isAuthenticated } from "../Middlewares/authMiddleware.js";
 import {
-  getAllVaults,
   getVaultById,
   getVaultUsers,
   getVaultCards,
@@ -14,17 +13,16 @@ import {
 } from "../Controllers/vaultController.js";
 
 const vaultRouter = express.Router();
-const vaultsRouter = express.Router();
 
-vaultsRouter.get("/", isAuthenticated, getAllVaults);
 vaultRouter.get("/:id", isAuthenticated, getVaultById);
 vaultRouter.get("/:id/users", isAuthenticated, getVaultUsers);
 vaultRouter.get(":id/cards", isAuthenticated, getVaultCards);
+vaultRouter.get("/:id/card/:cardId", isAuthenticated, getVaultCards);
 vaultRouter.post("/", createVault);
-vaultRouter.post("/:id/card", isAuthenticated, createCardInVault);
-vaultRouter.put("/:id", isAuthenticated, updateVault);
+vaultRouter.post("/:id/card", createCardInVault);
+vaultRouter.put("/:id", updateVault);
 vaultRouter.put("/:id/card/:cardId", isAuthenticated, updateCardInVault);
 vaultRouter.delete("/:id", isAuthenticated, deleteVault);
 vaultRouter.delete("/:id/card/:cardId", isAuthenticated, deleteCardInVault);
 
-export { vaultRouter, vaultsRouter };
+export default vaultRouter;

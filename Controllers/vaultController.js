@@ -1,8 +1,6 @@
-import { response } from "express";
 import encryption from "../Services/encryptionService.js";
 import {
   getVaultById as getVaultByIdRepo,
-  getAllVaults as getAllVaultsRepo,
   getVaultUsers as getVaultUsersRepo,
   getVaultCards as getVaultCardsRepo,
   createVault as createVaultRepo,
@@ -16,10 +14,11 @@ import {
 const DB = "vault";
 
 export const getVaultById = async (req, res) => {
-  const id = req.params.id;
+  const vaultId = req.params.id;
+  const userId = req.body.userId;
   try {
     const data = await getVaultByIdRepo(id);
-    const decryptedData = await encryption.decrypt(data, id, DB);
+    const decryptedData = await encryption.decrypt(data, vaultId, DB, userId);
     res.status(200).send({ success: true, data: decryptedData });
   } catch (error) {
     console.error("Error occurred during vault retrieval:", error);
@@ -27,28 +26,25 @@ export const getVaultById = async (req, res) => {
   }
 };
 
-export const getAllVaults = async (req, res) => {
-  try {
-    const datas = await getAllVaultsRepo();
-    const decryptedResults = {};
+export const getVaultUsers = async (req, res) => {
+  const id = req.params.id;
+  const decryptedResults = {};
 
-    for (const data of datas) {
-      const dataDeciphered = await encryption.decrypt(data, data.vaultId, DB);
-      Object.assign(decryptedResults, { [data.vaultId]: dataDeciphered });
+  try {
+    const data = await getVaultUsersRepo(id);
+    const users = data.users;
+
+    for (const user of users) {
+      const userDeciphered = await encryption.decrypt(
+        user,
+        user.userId,
+        DB,
+        id
+      );
+      Object.assign(decryptedResults, userDeciphered);
     }
 
     res.status(200).send({ success: true, data: decryptedResults });
-  } catch (error) {
-    console.error("Error occurred during vaults retrieval:", error);
-    res.status(500).send({ success: false, message: error.message });
-  }
-};
-
-export const getVaultUsers = async (req, res) => {
-  const id = req.params.id;
-  try {
-    const users = await getVaultUsersRepo(id);
-    res.status(200).send({ success: true, data: users });
   } catch (error) {
     console.error("Error occurred during vault users retrieval:", error);
     res.status(500).send({ success: false, message: error.message });
@@ -57,9 +53,9 @@ export const getVaultUsers = async (req, res) => {
 
 export const getVaultCards = async (req, res) => {
   const id = req.params.id;
+  const decryptedResults = {};
   try {
     const cards = await getVaultCardsRepo(id);
-    const decryptedResults = {};
 
     for (const card of cards) {
       const cardDeciphered = await encryption.decrypt(card, card.cardId, DB);
@@ -73,20 +69,36 @@ export const getVaultCards = async (req, res) => {
   }
 };
 
+export const getCardByVaultId = async (req, res) => {
+  const vaultId = req.params.id;
+  const cardId = req.params.cardId;
+  try {
+    const data = await getCardByVaultIdRepo(vaultId, cardId);
+    const decryptedData = await encryption.decrypt(
+      data,
+      cardId,
+      "card",
+      cardId
+    );
+    res.status(200).send({ success: true, data: decryptedData });
+  } catch (error) {
+    console.error("Error occurred during card retrieval in vault:", error);
+    res.status(500).send({ success: false, message: error.message });
+  }
+};
+
 export const createVault = async (req, res) => {
-  const userId = { userId: req.body.userId };
+  const userId = req.body.userId;
   const data = req.body;
   try {
     const { encryptedData, encipher } = await encryption.encrypt(data, DB);
     const vaultEncryptedData = {
       ...encryptedData,
       vaultEncrypted: encipher,
-      ...userId,
     };
-    console.log(vaultEncryptedData);
 
-    const vault = await createVaultRepo(vaultEncryptedData);
-    res.status(201).send({ success: true, data: vault });
+    const vault = await createVaultRepo(userId, vaultEncryptedData);
+    res.status(201).send({ success: true, data: encryptedData });
   } catch (error) {
     console.error("Error occurred during vault creation:", error);
     res.status(500).send({ success: false, message: error.message });
@@ -95,10 +107,18 @@ export const createVault = async (req, res) => {
 
 export const createCardInVault = async (req, res) => {
   const vaultId = req.params.id;
+  const data = req.body;
+
   try {
-    const encryptedData = await encryption.encrypt(req.body, DB);
-    const card = await createCardInVaultRepo(vaultId, encryptedData);
-    res.status(201).send({ success: true, data: card });
+    const { encryptedData, encipher } = await encryption.encrypt(data, DB);
+
+    const cardtEncryptedData = {
+      ...encryptedData,
+      cardEncrypted: encipher,
+    };
+
+    const card = await createCardInVaultRepo(vaultId, cardtEncryptedData);
+    res.status(201).send({ success: true, data: encryptedData });
   } catch (error) {
     console.error("Error occurred during card creation in vault:", error);
     res.status(500).send({ success: false, message: error.message });
@@ -106,11 +126,18 @@ export const createCardInVault = async (req, res) => {
 };
 
 export const updateVault = async (req, res) => {
-  const id = req.params.id;
+  const vaultId = req.params.id;
   try {
-    const encryptedData = await encryption.encrypt(req.body, id, DB);
-    const updatedVault = await updateVaultRepo(id, encryptedData);
-    res.status(200).send({ success: true, data: updatedVault });
+    const { encryptedData, encipher } = await encryption.encrypt(req.body, DB);
+
+    const vaultEncryptedData = {
+      ...encryptedData,
+      vaultEncrypted: encipher,
+    };
+
+    const updatedVault = await updateVaultRepo(vaultId, vaultEncryptedData);
+
+    res.status(200).send({ success: true, data: encryptedData });
   } catch (error) {
     console.error("Error occurred during vault update:", error);
     res.status(500).send({ success: false, message: error.message });

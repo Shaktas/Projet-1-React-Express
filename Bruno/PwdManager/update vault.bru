@@ -1,0 +1,18 @@
+meta {
+  name: update vault
+  type: http
+  seq: 9
+}
+
+put {
+  url: http://localhost:4000/vault/7/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "userId" : 3,
+    "vaultName" : "Hello"
+  }
+}
