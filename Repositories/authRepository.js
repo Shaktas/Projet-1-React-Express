@@ -20,4 +20,5 @@ export async function updateRefreshTokenEnd(userId, token, revoked) {
       refreshRevokedAt: revoked,
     },
   });
+  return endToken;
 }

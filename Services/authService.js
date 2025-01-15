@@ -191,13 +191,14 @@ class AuthService {
   async login(user) {
     try {
       const userDB = await getUserByEmail(user.userEmail);
+      console.log(user, userDB);
 
       const isValidPassword = await this.verifyPassword(
         user.userPassword,
         userDB.userPassword
       );
 
-      if (!isValidPassword || !userDB) {
+      if (!isValidPassword) {
         throw new Error("Connection failed");
       }
 
@@ -263,6 +264,8 @@ class AuthService {
         userPassword: hashedPassword,
       };
 
+      delete userObj.userEmail;
+
       const { encryptedData, encipher } = await encryptService.encrypt(
         userObj,
         "user",
@@ -272,6 +275,7 @@ class AuthService {
       const userDataEncrypted = {
         ...encryptedData,
         userEncrypted: encipher,
+        userEmail: userData.userEmail,
       };
 
       const newUser = await createUser(userDataEncrypted);

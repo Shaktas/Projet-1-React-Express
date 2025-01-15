@@ -35,7 +35,7 @@ const usersRouter = express.Router();
 const userRouter = express.Router();
 
 usersRouter.get("/", getUsers);
-userRouter.get("/:id", isAuthenticated, getOneUser);
+userRouter.get("/:id", getOneUser);
 userRouter.get("/:id/vaults", getAllVaultsByUserId);
 userRouter.post("/:id/cards", isAuthenticated, getAllCardsByUserId);
 // userRouter.put("/:id/", isAuthenticated, updateUser);

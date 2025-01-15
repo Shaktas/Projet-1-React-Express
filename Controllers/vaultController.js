@@ -88,10 +88,12 @@ export const getCardByVaultId = async (req, res) => {
 };
 
 export const createVault = async (req, res) => {
-  const userId = req.body.userId;
+  const userId = req.user.id;
   const data = req.body;
+  const vaultPost = { vaultName: data.name, userId: userId };
+
   try {
-    const { encryptedData, encipher } = await encryption.encrypt(data, DB);
+    const { encryptedData, encipher } = await encryption.encrypt(vaultPost, DB);
     const vaultEncryptedData = {
       ...encryptedData,
       vaultEncrypted: encipher,

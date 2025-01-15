@@ -40,10 +40,14 @@ async function getCardByVaultId(vaultId, cardId) {
 }
 
 async function createVault(userId, vaultData) {
+  console.log(vaultData);
+
   const newVault = await prisma.vault.create({
     data: {
       ...vaultData,
-      user: { connect: { userId: parseInt(userId) } },
+      user: {
+        connect: { userId: parseInt(userId) },
+      },
     },
   });
   return newVault;

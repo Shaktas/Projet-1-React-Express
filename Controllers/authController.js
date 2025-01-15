@@ -40,7 +40,11 @@ export const login = async (req, res) => {
     userPassword: req.body.pwd,
   };
   try {
+    console.log(userData);
+
     const auth = await authService.login(userData);
+
+    console.log(auth);
 
     if (auth.success) {
       res.cookie("jwt", auth.accessToken, {
@@ -104,6 +108,8 @@ export const refresh = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     const { jwt, refresh } = req.cookies;
+    console.log(req.user);
+
     const userId = req.user.id;
 
     if (!refresh && !jwt) {
@@ -111,6 +117,8 @@ export const logout = async (req, res) => {
     }
 
     const clear = await authService.logout(userId, refresh);
+
+    console.log(clear);
 
     if (!clear.success) {
       throw new Error("Logout failed");

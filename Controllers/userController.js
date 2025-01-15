@@ -12,10 +12,10 @@ const DB = "user";
 
 export const getOneUser = async (req, res) => {
   const id = req.params.id;
-  const dataDeciphered = "";
   try {
     const data = await getUserById(id);
-    const dataDeciphered = await encryption.decrypt(data, id, DB, "");
+    let dataDeciphered = await encryption.decrypt(data, id, DB, "");
+    dataDeciphered = { ...dataDeciphered, userEmail: data.userEmail };
 
     res.status(200).send({ success: true, data: dataDeciphered });
   } catch (error) {

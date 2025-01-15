@@ -117,17 +117,14 @@ class EncryptionService {
    * @throws {Error} If decryption fails or required metadata is missing
    */
   async decrypt(encrypted, id, db, userId) {
-    let userPassword = "";
-
-    if (db !== "user") {
-      userPassword = await getPwdUserbyId(userId);
-    } else {
-      userPassword = encrypted.userPassword;
+    if (db === "user") {
+      userId = id;
     }
+    let userPassword = await getPwdUserbyId(userId);
+
     const data = await getEncryptedData(db, id);
 
     const { iv, tags, salt } = data[db + "Encrypted"];
-    let decrypted = "";
     let decryptedObj = {};
 
     const combinedKey = crypto.pbkdf2Sync(
@@ -150,7 +147,7 @@ class EncryptionService {
           Buffer.from(iv, "hex")
         );
         decipher.setAuthTag(Buffer.from(tag, "hex"));
-        decrypted = decipher.update(value, "hex", "utf8");
+        let decrypted = decipher.update(value, "hex", "utf8");
         decrypted += decipher.final("utf8");
         Object.assign(decryptedObj, { [keyEncrypted]: decrypted });
       }
