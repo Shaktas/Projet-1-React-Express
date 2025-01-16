@@ -27,7 +27,7 @@ export const refreshToken = async (req, res, next) => {
       if (decodedJwt) {
         res.status(200).json({
           success: true,
-          id: decodedJwt.userId,
+          id: decodedJwt.id,
           message: "Autorized access",
         });
       }

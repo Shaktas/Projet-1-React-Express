@@ -98,6 +98,7 @@ export const refresh = async (req, res) => {
       sameSite: "strict",
       maxAge: 10 * 60 * 1000,
     });
+    console.log(user.id);
 
     res.send({ success: true, id: user.id });
   } catch (error) {
