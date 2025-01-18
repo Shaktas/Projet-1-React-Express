@@ -203,8 +203,8 @@ class AuthService {
       }
 
       const accessToken = this.generateAccessToken({
-        id: userDB.userId,
-        email: userDB.userEmail,
+        userId: userDB.userId,
+        userEmail: userDB.userEmail,
       });
 
       if (!accessToken) {
@@ -212,8 +212,8 @@ class AuthService {
       }
 
       const refreshToken = this.generateRefreshToken({
-        id: userDB.userId,
-        email: userDB.userEmail,
+        userId: userDB.userId,
+        userEmail: userDB.userEmail,
       });
 
       if (!refreshToken) {
@@ -231,8 +231,8 @@ class AuthService {
         accessToken,
         refreshToken,
         user: {
-          id: userDB.userId,
-          email: userDB.userEmail,
+          userId: userDB.userId,
+          userEmail: userDB.userEmail,
         },
       };
     } catch (error) {
@@ -281,8 +281,8 @@ class AuthService {
       const newUser = await createUser(userDataEncrypted);
 
       const accessToken = this.generateAccessToken({
-        id: newUser.userId,
-        email: newUser.userEmail,
+        userId: newUser.userId,
+        userEmail: newUser.userEmail,
       });
 
       if (!accessToken) {
@@ -290,8 +290,8 @@ class AuthService {
       }
 
       const refreshToken = this.generateRefreshToken({
-        id: newUser.userId,
-        email: newUser.userEmail,
+        userId: newUser.userId,
+        userEmail: newUser.userEmail,
       });
 
       if (!refreshToken) {
@@ -308,8 +308,8 @@ class AuthService {
         accessToken,
         refreshToken,
         user: {
-          id: newUser.userId,
-          email: newUser.userEmail,
+          userId: newUser.userId,
+          userEmail: newUser.userEmail,
         },
         message: "Successfully registered",
       };

@@ -12,7 +12,7 @@ async function getVaultById(vaultId) {
 async function getVaultCards(vaultId) {
   const getCardsByVaultId = await prisma.vault.findUnique({
     where: { vaultId: parseInt(vaultId) },
-    include: { Card: true },
+    include: { card: true },
   });
   return getCardsByVaultId;
 }
@@ -20,7 +20,7 @@ async function getVaultCards(vaultId) {
 async function getVaultUsers(vaultId) {
   const getUsersByVaultId = await prisma.vault.findUnique({
     where: { vaultId: parseInt(vaultId) },
-    include: { User: true },
+    include: { user: true },
   });
   return getUsersByVaultId;
 }
@@ -29,9 +29,9 @@ async function getCardByVaultId(vaultId, cardId) {
   const getCardByVaultId = await prisma.vault.findUnique({
     where: { vaultId: parseInt(vaultId) },
     include: {
-      Card: {
+      card: {
         where: {
-          CardId: parseInt(cardId),
+          cardId: parseInt(cardId),
         },
       },
     },
@@ -78,7 +78,7 @@ async function updateCardInVault(vaultId, cardId, cardData) {
     where: { vaultId: parseInt(vaultId) },
     include: {
       where: { cardId: parseInt(cardId) },
-      Card: cardData,
+      card: cardData,
     },
   });
   return updatedVault;

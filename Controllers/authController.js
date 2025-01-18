@@ -22,7 +22,7 @@ export const register = async (req, res) => {
       res.json({
         success: true,
         user: {
-          id: auth.user.id,
+          userId: auth.user.id,
           email: auth.user.email,
         },
       });
@@ -40,8 +40,6 @@ export const login = async (req, res) => {
     userPassword: req.body.pwd,
   };
   try {
-    console.log(userData);
-
     const auth = await authService.login(userData);
 
     console.log(auth);
@@ -64,7 +62,7 @@ export const login = async (req, res) => {
         success: true,
         message: "Successfully logged in",
         user: {
-          id: auth.user.id,
+          userId: auth.user.id,
           email: auth.user.email,
         },
       });
@@ -98,9 +96,8 @@ export const refresh = async (req, res) => {
       sameSite: "strict",
       maxAge: 10 * 60 * 1000,
     });
-    console.log(user.id);
 
-    res.send({ success: true, id: user.id });
+    res.send({ success: true, userId: user.id });
   } catch (error) {
     res.send({ success: false, message: error.message });
   }

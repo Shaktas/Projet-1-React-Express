@@ -53,16 +53,33 @@ export const getVaultUsers = async (req, res) => {
 
 export const getVaultCards = async (req, res) => {
   const id = req.params.id;
+  const userId = req.user.userId;
   const decryptedResults = {};
   try {
     const cards = await getVaultCardsRepo(id);
 
-    for (const card of cards) {
-      const cardDeciphered = await encryption.decrypt(card, card.cardId, DB);
-      Object.assign(decryptedResults, { [card.cardId]: cardDeciphered });
+    if (!cards) {
+      res
+        .status(404)
+        .send({ success: false, message: "No cards found in vault" });
     }
 
-    res.status(200).send({ success: true, data: decryptedResults });
+    const { card } = cards;
+    for (const c of card) {
+      const cardDeciphered = await encryption.decrypt(
+        c,
+        c.cardId,
+        "card",
+        userId
+      );
+      Object.assign(decryptedResults, {
+        [c.cardId]: cardDeciphered,
+      });
+    }
+
+    res
+      .status(200)
+      .send({ success: true, data: decryptedResults, vaultId: id });
   } catch (error) {
     console.error("Error occurred during vault cards retrieval:", error);
     res.status(500).send({ success: false, message: error.message });
@@ -88,7 +105,7 @@ export const getCardByVaultId = async (req, res) => {
 };
 
 export const createVault = async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user.userId;
   const data = req.body;
   const vaultPost = { vaultName: data.name, userId: userId };
 
@@ -109,10 +126,18 @@ export const createVault = async (req, res) => {
 
 export const createCardInVault = async (req, res) => {
   const vaultId = req.params.id;
-  const data = req.body;
+  const cardPost = {
+    cardTitle: req.body.name,
+    cardLogin: req.body.username,
+    cardPassword: req.body.password,
+    cardUrl: req.body.url,
+    cardType: req.body.type,
+    userId: req.user.userId,
+  };
+  console.log(cardPost);
 
   try {
-    const { encryptedData, encipher } = await encryption.encrypt(data, DB);
+    const { encryptedData, encipher } = await encryption.encrypt(cardPost, DB);
 
     const cardtEncryptedData = {
       ...encryptedData,

@@ -44,6 +44,7 @@ model Card {
   cardLogin     String
   cardPassword  String
   cardUrl       String
+  cardType      String
   cardEncrypted Json
   cardCreatedAt DateTime @default(now())
   cardUpdatedAt DateTime @updatedAt

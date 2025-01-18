@@ -16,7 +16,7 @@ const vaultRouter = express.Router();
 
 vaultRouter.get("/:id", isAuthenticated, getVaultById);
 vaultRouter.get("/:id/users", isAuthenticated, getVaultUsers);
-vaultRouter.get(":id/cards", isAuthenticated, getVaultCards);
+vaultRouter.get("/:id/cards", isAuthenticated, getVaultCards);
 vaultRouter.get("/:id/card/:cardId", isAuthenticated, getVaultCards);
 vaultRouter.post("/", isAuthenticated, createVault);
 vaultRouter.post("/:id/card", isAuthenticated, createCardInVault);
