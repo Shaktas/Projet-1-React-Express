@@ -62,8 +62,8 @@ export const login = async (req, res) => {
         success: true,
         message: "Successfully logged in",
         user: {
-          userId: auth.user.id,
-          email: auth.user.email,
+          userId: auth.user.userId,
+          userEmail: auth.user.userEmail,
         },
       });
     } else {
