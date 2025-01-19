@@ -80,14 +80,15 @@ export const login = async (req, res) => {
 export const refresh = async (req, res) => {
   try {
     const user = req.user;
+    console.log(user);
 
     if (!user) {
       throw new Error("Unauthorized access");
     }
 
     const token = authService.generateAccessToken({
-      userId: user.id,
-      userEmail: user.email,
+      userId: user.userId,
+      userEmail: user.userEmail,
     });
 
     res.cookie("jwt", token, {
@@ -97,7 +98,7 @@ export const refresh = async (req, res) => {
       maxAge: 10 * 60 * 1000,
     });
 
-    res.send({ success: true, userId: user.id });
+    res.send({ success: true, userId: user.userId });
   } catch (error) {
     res.send({ success: false, message: error.message });
   }
