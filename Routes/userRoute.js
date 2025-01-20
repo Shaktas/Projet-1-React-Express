@@ -28,7 +28,7 @@ import {
   deleteOneUser,
   getAllVaultsByUserId,
   getAllCardsByUserId,
-  // updateUser,
+  updateOneUser,
 } from "../Controllers/userController.js";
 
 const usersRouter = express.Router();
@@ -38,7 +38,7 @@ usersRouter.get("/", getUsers);
 userRouter.get("/:id", getOneUser);
 userRouter.get("/:id/vaults", isAuthenticated, getAllVaultsByUserId);
 userRouter.post("/:id/cards", isAuthenticated, getAllCardsByUserId);
-// userRouter.put("/:id/", isAuthenticated, updateUser);
+userRouter.put("/:id/", isAuthenticated, updateOneUser);
 userRouter.delete("/:id/", isAuthenticated, deleteOneUser);
 
 export { usersRouter, userRouter };

@@ -280,6 +280,8 @@ class AuthService {
 
       const newUser = await createUser(userDataEncrypted);
 
+      console.log(newUser);
+
       const accessToken = this.generateAccessToken({
         userId: newUser.userId,
         userEmail: newUser.userEmail,

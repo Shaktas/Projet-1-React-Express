@@ -5,6 +5,7 @@ import {
   deleteUser,
   getVaultsByUserId,
   getCardsByUserId,
+  updateUser,
 } from "../Repositories/userRepository.js";
 import encryption from "../Services/encryptionService.js";
 
@@ -91,6 +92,36 @@ export const getAllCardsByUserId = async (req, res) => {
     res.status(200).send({ success: true, data: decryptedResults });
   } catch (error) {
     console.error("Error occurred during user retrieval:", error);
+    res.status(500).send({ success: false, message: error.message });
+  }
+};
+
+export const updateOneUser = async (req, res) => {
+  const id = req.params.id;
+  const data = req.body;
+  const email = data.email;
+  const dataFormat = {
+    userPseudo: data.pseudo,
+    userId: id,
+  };
+  try {
+    const { encryptedData, encipher } = await encryption.encrypt(
+      dataFormat,
+      DB
+    );
+    console.log(encryptedData, "encrypte", encipher, "encipher");
+
+    const updateData = {
+      ...encryptedData,
+      userId: parseInt(id),
+      userEncrypted: encipher,
+      userEmail: email,
+    };
+
+    const update = await updateUser(id, updateData);
+    res.status(200).send({ success: true, data: update });
+  } catch (error) {
+    console.error("Error occurred during user update:", error);
     res.status(500).send({ success: false, message: error.message });
   }
 };

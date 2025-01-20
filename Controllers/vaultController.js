@@ -154,8 +154,10 @@ export const createCardInVault = async (req, res) => {
 
 export const updateVault = async (req, res) => {
   const vaultId = req.params.id;
+  const data = req.body;
+  data.userId = req.user.userId;
   try {
-    const { encryptedData, encipher } = await encryption.encrypt(req.body, DB);
+    const { encryptedData, encipher } = await encryption.encrypt(data, DB);
 
     const vaultEncryptedData = {
       ...encryptedData,
@@ -174,8 +176,20 @@ export const updateVault = async (req, res) => {
 export const updateCardInVault = async (req, res) => {
   const vaultId = req.params.id;
   const cardId = req.params.cardId;
+  const userId = req.user.userId;
+  const data = {
+    cardTitle: req.body.name,
+    cardLogin: req.body.username,
+    cardPassword: req.body.password,
+    cardUrl: req.body.url,
+    cardType: req.body.type,
+    userId,
+  };
+
+  console.log(data);
+
   try {
-    const encryptedData = await encryption.encrypt(req.body, cardId, DB);
+    const encryptedData = await encryption.encrypt(data, "cards");
     const updatedCard = await updateCardInVaultRepo(
       vaultId,
       cardId,
