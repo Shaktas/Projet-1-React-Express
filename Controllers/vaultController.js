@@ -189,11 +189,17 @@ export const updateCardInVault = async (req, res) => {
   console.log(data);
 
   try {
-    const encryptedData = await encryption.encrypt(data, "cards");
+    const { encryptedData, encipher } = await encryption.encrypt(data, "cards");
+
+    const cardEncryptedData = {
+      ...encryptedData,
+      cardEncrypted: encipher,
+    };
+
     const updatedCard = await updateCardInVaultRepo(
       vaultId,
       cardId,
-      encryptedData
+      cardEncryptedData
     );
     res.status(200).send({ success: true, data: updatedCard });
   } catch (error) {

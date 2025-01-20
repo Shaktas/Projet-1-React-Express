@@ -77,8 +77,17 @@ async function updateCardInVault(vaultId, cardId, cardData) {
   const updatedVault = await prisma.vault.update({
     where: { vaultId: parseInt(vaultId) },
     include: {
-      where: { cardId: parseInt(cardId) },
-      card: cardData,
+      card: true,
+    },
+    data: {
+      card: {
+        update: {
+          where: {
+            cardId: parseInt(cardId),
+          },
+          data: cardData,
+        },
+      },
     },
   });
   return updatedVault;
