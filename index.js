@@ -1,13 +1,12 @@
 import express, { json } from "express";
 import cors from "cors";
+import { isAuthenticated } from "./Middlewares/authMiddleware.js";
+import { uploadFile } from "./Middlewares/MulterMiddleware.js";
 import authRouter from "./Routes/authRoute.js";
 import { userRouter, usersRouter } from "./Routes/userRoute.js";
 import vaultRouter from "./Routes/vaultRoute.js";
-// import vaultRoute from "./Routes/vaultRoute.js";
-// import cardRoute from "./Routes/cardRoute.js";
 import { config } from "./Config/env.js";
 import cookieParser from "cookie-parser";
-import { getAllUsers, getUserById } from "./Repositories/userRepository.js";
 
 const app = express();
 
@@ -23,11 +22,13 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
 app.use("/", authRouter);
 app.use("/users", usersRouter);
 app.use("/user", userRouter);
 app.use("/vault", vaultRouter);
+app.post("/upload", isAuthenticated, uploadFile, (req, res) =>
+  res.send(`Fichier téléchargé avec succès`)
+);
 
 const PORT = config.port;
 app.listen(PORT, () => {

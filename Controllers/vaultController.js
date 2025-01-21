@@ -19,10 +19,10 @@ export const getVaultById = async (req, res) => {
   try {
     const data = await getVaultByIdRepo(id);
     const decryptedData = await encryption.decrypt(data, vaultId, DB, userId);
-    res.status(200).send({ success: true, data: decryptedData });
+    res.status(200).json({ success: true, data: decryptedData });
   } catch (error) {
     console.error("Error occurred during vault retrieval:", error);
-    res.status(500).send({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -44,10 +44,10 @@ export const getVaultUsers = async (req, res) => {
       Object.assign(decryptedResults, userDeciphered);
     }
 
-    res.status(200).send({ success: true, data: decryptedResults });
+    res.status(200).json({ success: true, data: decryptedResults });
   } catch (error) {
     console.error("Error occurred during vault users retrieval:", error);
-    res.status(500).send({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -57,32 +57,31 @@ export const getVaultCards = async (req, res) => {
   const decryptedResults = {};
   try {
     const cards = await getVaultCardsRepo(id);
-
-    if (!cards) {
+    if (cards) {
+      const { card } = cards;
+      for (const c of card) {
+        const cardDeciphered = await encryption.decrypt(
+          c,
+          c.cardId,
+          "card",
+          userId
+        );
+        Object.assign(decryptedResults, {
+          [c.cardId]: cardDeciphered,
+        });
+      }
+      res
+        .status(200)
+        .json({ success: true, data: decryptedResults, vaultId: id });
+    } else {
+      console.log(cards);
       res
         .status(404)
-        .send({ success: false, message: "No cards found in vault" });
+        .json({ success: false, message: "No cards found in vault" });
     }
-
-    const { card } = cards;
-    for (const c of card) {
-      const cardDeciphered = await encryption.decrypt(
-        c,
-        c.cardId,
-        "card",
-        userId
-      );
-      Object.assign(decryptedResults, {
-        [c.cardId]: cardDeciphered,
-      });
-    }
-
-    res
-      .status(200)
-      .send({ success: true, data: decryptedResults, vaultId: id });
   } catch (error) {
     console.error("Error occurred during vault cards retrieval:", error);
-    res.status(500).send({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -97,10 +96,10 @@ export const getCardByVaultId = async (req, res) => {
       "card",
       cardId
     );
-    res.status(200).send({ success: true, data: decryptedData });
+    res.status(200).json({ success: true, data: decryptedData });
   } catch (error) {
     console.error("Error occurred during card retrieval in vault:", error);
-    res.status(500).send({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -117,10 +116,10 @@ export const createVault = async (req, res) => {
     };
 
     const vault = await createVaultRepo(userId, vaultEncryptedData);
-    res.status(201).send({ success: true, data: encryptedData });
+    res.status(201).json({ success: true, data: encryptedData });
   } catch (error) {
     console.error("Error occurred during vault creation:", error);
-    res.status(500).send({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -145,10 +144,10 @@ export const createCardInVault = async (req, res) => {
     };
 
     const card = await createCardInVaultRepo(vaultId, cardtEncryptedData);
-    res.status(201).send({ success: true, data: encryptedData });
+    res.status(201).json({ success: true, data: encryptedData });
   } catch (error) {
     console.error("Error occurred during card creation in vault:", error);
-    res.status(500).send({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -166,10 +165,10 @@ export const updateVault = async (req, res) => {
 
     const updatedVault = await updateVaultRepo(vaultId, vaultEncryptedData);
 
-    res.status(200).send({ success: true, data: encryptedData });
+    res.status(200).json({ success: true, data: encryptedData });
   } catch (error) {
     console.error("Error occurred during vault update:", error);
-    res.status(500).send({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -201,10 +200,10 @@ export const updateCardInVault = async (req, res) => {
       cardId,
       cardEncryptedData
     );
-    res.status(200).send({ success: true, data: updatedCard });
+    res.status(200).json({ success: true, data: updatedCard });
   } catch (error) {
     console.error("Error occurred during card update in vault:", error);
-    res.status(500).send({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -214,23 +213,25 @@ export const deleteVault = async (req, res) => {
     await deleteVaultRepo(id);
     res
       .status(200)
-      .send({ success: true, message: "Vault deleted successfully" });
+      .json({ success: true, message: "Vault deleted successfully" });
   } catch (error) {
     console.error("Error occurred during vault deletion:", error);
-    res.status(500).send({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const deleteCardInVault = async (req, res) => {
   const vaultId = req.params.id;
   const cardId = req.params.cardId;
+  console.log(req.params);
+
   try {
     await deleteCardInVaultRepo(vaultId, cardId);
     res
       .status(200)
-      .send({ success: true, message: "Card deleted successfully" });
+      .json({ success: true, message: "Card deleted successfully" });
   } catch (error) {
     console.error("Error occurred during card deletion in vault:", error);
-    res.status(500).send({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };

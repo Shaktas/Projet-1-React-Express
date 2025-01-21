@@ -94,10 +94,10 @@ async function updateCardInVault(vaultId, cardId, cardData) {
 }
 
 async function deleteCardInVault(vaultId, cardId) {
-  const deletedVault = await prisma.vault.delete({
-    where: { vaultId: parseInt(vaultId) },
-    include: {
-      where: { cardId: parseInt(cardId) },
+  const deletedVault = await prisma.card.delete({
+    where: {
+      vaultId: parseInt(vaultId),
+      cardId: parseInt(cardId),
     },
   });
   return deletedVault;
