@@ -21,13 +21,15 @@
  */
 
 import express from "express";
-import { isAuthenticated } from "../Middlewares/authMiddleware.js";
+import {
+  isAuthenticated,
+  isResetToken,
+} from "../Middlewares/authMiddleware.js";
 import {
   getOneUser,
   getUsers,
   deleteOneUser,
   getAllVaultsByUserId,
-  getAllCardsByUserId,
   updateOneUser,
 } from "../Controllers/userController.js";
 
@@ -37,7 +39,6 @@ const userRouter = express.Router();
 usersRouter.get("/", getUsers);
 userRouter.get("/:id", getOneUser);
 userRouter.get("/:id/vaults", isAuthenticated, getAllVaultsByUserId);
-userRouter.post("/:id/cards", isAuthenticated, getAllCardsByUserId);
 userRouter.put("/:id/", isAuthenticated, updateOneUser);
 userRouter.delete("/:id/", isAuthenticated, deleteOneUser);
 

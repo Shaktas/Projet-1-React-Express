@@ -14,16 +14,17 @@ datasource db {
 }
 
 model User {
-  userId        Int            @id @default(autoincrement())
+  userId        Int             @id @default(autoincrement())
   userPseudo    String
-  userEmail     String         @unique
+  userEmail     String          @unique
   userPassword  String
   userEncrypted Json
-  userCreatedAt DateTime       @default(now())
-  userUpdatedAt DateTime       @updatedAt
+  userCreatedAt DateTime        @default(now())
+  userUpdatedAt DateTime        @updatedAt
   vault         Vault[]
   refresh       RefreshToken[]
   posseder      Posseder[]
+  passwordReset PasswordReset[]
 }
 
 model Vault {
@@ -62,6 +63,18 @@ model RefreshToken {
   refreshRevokedAt DateTime?
 
   @@index([userId])
+}
+
+model PasswordReset {
+  passwordResetId        Int      @id @default(autoincrement())
+  passwordResetToken     String
+  passwordResetExpiresAt DateTime
+  passwordResetCreatedAt DateTime @default(now())
+  passwordResetUsed      Boolean  @default(false)
+  user                   User     @relation(fields: [userId], references: [userId])
+  userId                 Int
+
+  @@index([passwordResetToken])
 }
 
 model Posseder {

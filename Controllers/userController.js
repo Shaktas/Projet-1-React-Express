@@ -3,12 +3,16 @@ import {
   getUserById,
   getAllUsers,
   deleteUser,
-  getVaultsByUserId,
-  getCardsByUserId,
+  getAllInfosUserById,
   updateUser,
+  getVaultsByUserId,
 } from "../Repositories/userRepository.js";
+import {
+  updateCardInVault,
+  updateVault as updatedVaultRepo,
+} from "../Repositories/vaultRepository.js";
 import encryption from "../Services/encryptionService.js";
-
+import auth from "../Services/authService.js";
 const DB = "user";
 
 export const getOneUser = async (req, res) => {
@@ -71,31 +75,6 @@ export const getAllVaultsByUserId = async (req, res) => {
   }
 };
 
-export const getAllCardsByUserId = async (req, res) => {
-  const id = req.params.id;
-
-  try {
-    const decryptedResults = {};
-    const datas = await getCardsByUserId(id);
-    const cards = datas.card;
-
-    for (const data of datas) {
-      const dataDeciphered = await encryption.decrypt(
-        cards,
-        cards.cardsId,
-        "card",
-        id
-      );
-      Object.assign(decryptedResults, { [cards.userId]: dataDeciphered });
-    }
-
-    res.status(200).send({ success: true, data: decryptedResults });
-  } catch (error) {
-    console.error("Error occurred during user retrieval:", error);
-    res.status(500).send({ success: false, message: error.message });
-  }
-};
-
 export const updateOneUser = async (req, res) => {
   const id = req.params.id;
   const data = req.body;
@@ -109,7 +88,6 @@ export const updateOneUser = async (req, res) => {
       dataFormat,
       DB
     );
-    console.log(encryptedData, "encrypte", encipher, "encipher");
 
     const updateData = {
       ...encryptedData,
@@ -124,6 +102,141 @@ export const updateOneUser = async (req, res) => {
     console.error("Error occurred during user update:", error);
     res.status(500).send({ success: false, message: error.message });
   }
+};
+
+export const updateOneUserPassword = async (req, res) => {
+  const userId = req.user.userId;
+
+  const newPassword = req.body.password;
+  let data = {};
+
+  try {
+    // Get all user data
+    const data = await getAllInfosUserById(userId);
+
+    // user data
+    const userData = {
+      userId: userId,
+      userPseudo: data.userPseudo,
+      userEncrypted: data.userEncrypted,
+    };
+
+    // vault data
+    const vaultData = [];
+    for (const vault of data.vault) {
+      vaultData.push({
+        ...vault,
+      });
+    }
+
+    // card data
+    const cardData = [];
+    for (const vault of data.vault) {
+      for (const card of vault.card) {
+        cardData.push({
+          ...card,
+        });
+      }
+    }
+
+    //decript user data
+    let userDeciphered = await encryption.decrypt(userData, userId, DB, "");
+    userDeciphered = { ...userDeciphered, userEmail: data.userEmail };
+
+    //decript vault data
+    let vaultDeciphered = [];
+    for (const vault of vaultData) {
+      delete vault.card;
+
+      let decrypt = await encryption.decrypt(
+        vault,
+        vault.vaultId,
+        "vault",
+        userId
+      );
+      vaultDeciphered.push({ ...decrypt });
+    }
+    //decript card data
+    let cardDeciphered = [];
+    for (const card of cardData) {
+      let decrypt = await encryption.decrypt(card, card.cardId, "card", userId);
+      cardDeciphered.push({
+        ...decrypt,
+        cardId: card.cardId,
+        vaultId: card.vaultId,
+      });
+    }
+    //hash password
+    const hashedPassword = await auth.hashPassword(newPassword);
+
+    //crypt user data
+    const userUpdate = {
+      userPseudo: userDeciphered.userPseudo,
+    };
+
+    const { encryptedData, encipher } = await encryption.encrypt(
+      userUpdate,
+      DB,
+      hashedPassword
+    );
+
+    const updateData = {
+      ...encryptedData,
+      userId: parseInt(userId),
+      userPassword: hashedPassword,
+      userEncrypted: encipher,
+      userEmail: userDeciphered.userEmail,
+    };
+
+    const updateUser = await updateUser(userId, updateData);
+
+    //crypt vault data
+
+    for (const vault of vaultDeciphered) {
+      const { encryptedData, encipher } = await encryption.encrypt(
+        vault,
+        "vault",
+        hashedPassword
+      );
+
+      const vaultEncryptedData = {
+        ...encryptedData,
+        vaultEncrypted: encipher,
+      };
+
+      const updateVault = await updatedVaultRepo(
+        vault.vaultId,
+        vaultEncryptedData
+      );
+    }
+
+    //crypt card data
+
+    for (const card of cardDeciphered) {
+      const { encryptedData, encipher } = await encryption.encrypt(
+        card,
+        "card",
+        hashedPassword
+      );
+
+      const cardEncryptedData = {
+        ...encryptedData,
+        cardEncrypted: encipher,
+      };
+      const updateCard = await updateCardInVault(
+        card.vaultId,
+        card.cardId,
+        cardEncryptedData
+      );
+    }
+
+    res.status(200).send({ success: true, data: updateUser });
+  } catch (error) {
+    console.error("Error occurred during user retrieval:", error);
+    res.status(500).send({ success: false, message: error.message });
+  }
+
+  res.send({ fin: "fin" });
 };
 
 export const deleteOneUser = async (req, res) => {

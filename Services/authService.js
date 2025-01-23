@@ -35,6 +35,7 @@ class AuthService {
   #privateKey = null;
   #publicKey = null;
   #refreshKey = null;
+  #resetKey = null;
 
   constructor() {
     if (AuthService.instance) {
@@ -60,6 +61,9 @@ class AuthService {
       if (!this.#refreshKey) {
         await this.loadRefreshKey();
       }
+      if (!this.#resetKey) {
+        await this.loadResetKey();
+      }
     } catch (error) {
       throw new Error(`Failed to load JWT keys: ${error.message}`);
     }
@@ -82,6 +86,12 @@ class AuthService {
   async loadRefreshKey() {
     this.#refreshKey = await fs.readFile(
       path.resolve(config.jwt.refresh),
+      "utf8"
+    );
+  }
+  async loadResetKey() {
+    this.#refreshKey = await fs.readFile(
+      path.resolve(config.jwt.reset),
       "utf8"
     );
   }
@@ -191,7 +201,6 @@ class AuthService {
   async login(user) {
     try {
       const userDB = await getUserByEmail(user.userEmail);
-      console.log(user, userDB);
 
       const isValidPassword = await this.verifyPassword(
         user.userPassword,
@@ -279,8 +288,6 @@ class AuthService {
       };
 
       const newUser = await createUser(userDataEncrypted);
-
-      console.log(newUser);
 
       const accessToken = this.generateAccessToken({
         userId: newUser.userId,

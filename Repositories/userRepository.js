@@ -12,6 +12,19 @@ async function getUserById(id) {
   });
   return getUserById;
 }
+async function getAllInfosUserById(id) {
+  const getAllInfosUserById = await prisma.user.findUnique({
+    where: { userId: parseInt(id) },
+    include: {
+      vault: {
+        include: {
+          card: true,
+        },
+      },
+    },
+  });
+  return getAllInfosUserById;
+}
 
 async function getUserByEmail(email) {
   const getUserByEmail = await prisma.user.findUnique({
@@ -36,14 +49,6 @@ async function getVaultsByUserId(id) {
   return getVaultsByUserId;
 }
 
-async function getCardsByUserId(id) {
-  const getCardsByUserId = await prisma.user.findUnique({
-    where: { userId: parseInt(id) },
-    include: { Card: true },
-  });
-  return getCardsByUserId;
-}
-
 async function createUser(userData) {
   const newUser = await prisma.user.create({ data: { ...userData } });
   return newUser;
@@ -66,11 +71,11 @@ async function deleteUser(id) {
 
 export {
   getAllUsers,
+  getAllInfosUserById,
   getUserById,
   getUserByEmail,
   getPwdUserbyId,
   getVaultsByUserId,
-  getCardsByUserId,
   createUser,
   updateUser,
   deleteUser,

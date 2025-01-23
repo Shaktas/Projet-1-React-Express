@@ -1,7 +1,6 @@
 import encryption from "../Services/encryptionService.js";
 import {
   getVaultById as getVaultByIdRepo,
-  getVaultUsers as getVaultUsersRepo,
   getVaultCards as getVaultCardsRepo,
   createVault as createVaultRepo,
   createCardInVault as createCardInVaultRepo,
@@ -22,31 +21,6 @@ export const getVaultById = async (req, res) => {
     res.status(200).json({ success: true, data: decryptedData });
   } catch (error) {
     console.error("Error occurred during vault retrieval:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-export const getVaultUsers = async (req, res) => {
-  const id = req.params.id;
-  const decryptedResults = {};
-
-  try {
-    const data = await getVaultUsersRepo(id);
-    const users = data.users;
-
-    for (const user of users) {
-      const userDeciphered = await encryption.decrypt(
-        user,
-        user.userId,
-        DB,
-        id
-      );
-      Object.assign(decryptedResults, userDeciphered);
-    }
-
-    res.status(200).json({ success: true, data: decryptedResults });
-  } catch (error) {
-    console.error("Error occurred during vault users retrieval:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -184,8 +158,6 @@ export const updateCardInVault = async (req, res) => {
     cardType: req.body.type,
     userId,
   };
-
-  console.log(data);
 
   try {
     const { encryptedData, encipher } = await encryption.encrypt(data, "cards");

@@ -1,4 +1,5 @@
 import AuthService from "../Services/authService.js";
+import encryption from "../Services/encryptionService.js";
 
 export const isAuthenticated = (req, res, next) => {
   const token = req.cookies.jwt;
@@ -42,4 +43,20 @@ export const refreshToken = async (req, res, next) => {
   } catch (error) {
     res.status(401).json({ message: error.message });
   }
+};
+
+export const isResetToken = async (req, res, next) => {
+  const token = req.body.token;
+  try {
+    const decoded = await encryption.verifyResetToken(token);
+
+    if (!decoded) {
+      return res.status(401).json({ message: "Unautorized access" });
+    }
+    req.user = decoded;
+  } catch (error) {
+    res.status(401).json({ message: error.message });
+  }
+
+  next();
 };

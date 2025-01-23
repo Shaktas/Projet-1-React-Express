@@ -30,10 +30,16 @@ export const config = {
     private: process.env.RSA_PRIVATE_KEY_PATH,
     public: process.env.RSA_PUBLIC_KEY_PATH,
     refresh: process.env.REFRESH_KEY_PATH,
+    reset: process.env.RESET_KEY_PATH,
   },
   aes: {
     key: process.env.SECRET_KEY_PATH,
   },
   port: process.env.PORT,
   app: process.env.NODE_ENV,
+  gmail: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS,
+  },
+  frontUrl: process.env.FRONT_URL,
 };

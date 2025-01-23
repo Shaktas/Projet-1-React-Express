@@ -3,6 +3,10 @@ import { config } from "../Config/env.js";
 import { getEncryptedData } from "../Repositories/encryptionRepository.js";
 import { getPwdUserbyId } from "../Repositories/userRepository.js";
 import fs from "fs/promises";
+import {
+  getResetToken,
+  saveResetToken,
+} from "../Repositories/authRepository.js";
 
 /**
  * Service for handling encryption and decryption operations using AES-256-GCM.
@@ -54,7 +58,6 @@ class EncryptionService {
       userPassword = await getPwdUserbyId(texts.userId);
       delete texts.userId;
     }
-    console.log(texts);
 
     try {
       const randomSalt = this.randomSalt();
@@ -120,6 +123,7 @@ class EncryptionService {
     if (db === "user") {
       userId = id;
     }
+
     let userPassword = await getPwdUserbyId(userId);
 
     const data = await getEncryptedData(db, id);
@@ -153,6 +157,50 @@ class EncryptionService {
       }
     }
     return decryptedObj;
+  }
+
+  async generateResetToken(userId) {
+    // Use crypto for one-time reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Hash token for storage
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    // Short expiry for security
+    const expiresIn = 120 * 60 * 1000; // 15 minutes
+    const expiresAt = new Date(Date.now() + expiresIn);
+    const saveToken = await saveResetToken(userId, hashedToken, expiresAt);
+
+    if (!saveToken) {
+      throw new Error("Failed to save reset token");
+    }
+
+    return {
+      token: resetToken,
+    };
+  }
+
+  async verifyResetToken(token) {
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    try {
+      const resetToken = await getResetToken(hashedToken);
+      if (!resetToken) {
+        throw new Error("Token not found");
+      }
+
+      if (resetToken.passwordResetExpiresAt < Date.now()) {
+        throw new Error("Token expired");
+      }
+
+      return resetToken;
+    } catch (error) {
+      console.error("Error occurred during reset token verification:", error);
+      return null;
+    }
   }
 }
 

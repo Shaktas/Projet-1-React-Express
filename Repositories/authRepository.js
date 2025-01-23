@@ -22,3 +22,25 @@ export async function updateRefreshTokenEnd(userId, token, revoked) {
   });
   return endToken;
 }
+
+export async function saveResetToken(userId, token, expireIn) {
+  const saveToken = await prisma.passwordReset.create({
+    data: {
+      passwordResetToken: token,
+      passwordResetExpiresAt: expireIn,
+      user: {
+        connect: {
+          userId: userId,
+        },
+      },
+    },
+  });
+  return saveToken;
+}
+
+export async function getResetToken(token) {
+  const resetToken = await prisma.passwordReset.findFirst({
+    where: { passwordResetToken: token },
+  });
+  return resetToken;
+}
