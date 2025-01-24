@@ -24,7 +24,6 @@ export const refreshToken = async (req, res, next) => {
   try {
     if (req.cookies.jwt) {
       const decodedJwt = AuthService.verifyAccessToken(req.cookies.jwt);
-      console.log("decode ", decodedJwt);
 
       if (decodedJwt) {
         res.status(200).json({

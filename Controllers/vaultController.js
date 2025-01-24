@@ -48,7 +48,6 @@ export const getVaultCards = async (req, res) => {
         .status(200)
         .json({ success: true, data: decryptedResults, vaultId: id });
     } else {
-      console.log(cards);
       res
         .status(404)
         .json({ success: false, message: "No cards found in vault" });
@@ -107,7 +106,6 @@ export const createCardInVault = async (req, res) => {
     cardType: req.body.type,
     userId: req.user.userId,
   };
-  console.log(cardPost);
 
   try {
     const { encryptedData, encipher } = await encryption.encrypt(cardPost, DB);
@@ -195,7 +193,6 @@ export const deleteVault = async (req, res) => {
 export const deleteCardInVault = async (req, res) => {
   const vaultId = req.params.id;
   const cardId = req.params.cardId;
-  console.log(req.params);
 
   try {
     await deleteCardInVaultRepo(vaultId, cardId);

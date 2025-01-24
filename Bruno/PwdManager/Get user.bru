@@ -5,7 +5,11 @@ meta {
 }
 
 get {
-  url: http://localhost:4000/user/5
+  url: http://localhost:4000/user/1
   body: none
-  auth: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJFbWFpbCI6InNoYWt0YXM2OEBnbWFpbC5jb20iLCJpYXQiOjE3Mzc3MDU2NjYsImV4cCI6MTczNzcwNjI2Nn0.DQTpGlK9WzUDI6GSDbxWylNepQABHNZIMXgsOS6XGR9FVdrD05miQEGLrwcDQgGyCI8aXad_HFgvWhznymufGPtUXcJSSOl0cUXxNOISsk19I88g2sMU5B8QHSr31bz-iYkS1vnUGyOU0afefyJDKSS_Uz_MSagGSyZaRavHkl1-r-wTp5QKKargkp0QVUf6j-VosnqNc8CkbFei-KqoDtpouPJ3laBG5FsGJe018oXLvV3vzei8pxHe62pMN4zoYLXeaP7Byw9RixiGOO-lm3n31v-MNIBOq9GOx5HqiuLD1bwwAW4_EEKpfw-pc4nkY3Jdc8lblnfh5BjKzB3Llw
 }

@@ -34,7 +34,6 @@ const mailController = {
       if (!user) {
         return res.status(404).json({ message: "Email not found" });
       }
-      console.log("jepasse ici");
 
       const userDecripted = await encryption.decrypt(
         user,

@@ -18,6 +18,12 @@ export const register = async (req, res) => {
         sameSite: "strict",
         maxAge: 10 * 60 * 1000,
       });
+      res.cookie("refresh", auth.refreshToken, {
+        httpOnly: true,
+        secure: config.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 1000,
+      });
 
       res.json({
         success: true,
@@ -41,8 +47,6 @@ export const login = async (req, res) => {
   };
   try {
     const auth = await authService.login(userData);
-
-    console.log(auth);
 
     if (auth.success) {
       res.cookie("jwt", auth.accessToken, {
@@ -80,7 +84,6 @@ export const login = async (req, res) => {
 export const refresh = async (req, res) => {
   try {
     const user = req.user;
-    console.log(user);
 
     if (!user) {
       throw new Error("Unauthorized access");
@@ -107,7 +110,6 @@ export const refresh = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     const { jwt, refresh } = req.cookies;
-    console.log(req.user);
 
     const userId = req.user.id;
 
@@ -116,8 +118,6 @@ export const logout = async (req, res) => {
     }
 
     const clear = await authService.logout(userId, refresh);
-
-    console.log(clear);
 
     if (!clear.success) {
       throw new Error("Logout failed");

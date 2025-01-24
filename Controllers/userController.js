@@ -154,8 +154,9 @@ export const updateOneUserPassword = async (req, res) => {
         "vault",
         userId
       );
-      vaultDeciphered.push({ ...decrypt });
+      vaultDeciphered.push({ ...decrypt, vaultId: vault.vaultId });
     }
+
     //decript card data
     let cardDeciphered = [];
     for (const card of cardData) {
@@ -188,11 +189,14 @@ export const updateOneUserPassword = async (req, res) => {
       userEmail: userDeciphered.userEmail,
     };
 
-    const updateUser = await updateUser(userId, updateData);
+    const updateUserEncrypt = await updateUser(userId, updateData);
 
     //crypt vault data
 
     for (const vault of vaultDeciphered) {
+      const vaultId = vault.vaultId;
+      delete vault.vaultId;
+
       const { encryptedData, encipher } = await encryption.encrypt(
         vault,
         "vault",
@@ -203,16 +207,18 @@ export const updateOneUserPassword = async (req, res) => {
         ...encryptedData,
         vaultEncrypted: encipher,
       };
-
-      const updateVault = await updatedVaultRepo(
-        vault.vaultId,
-        vaultEncryptedData
-      );
+      const updateVault = await updatedVaultRepo(vaultId, vaultEncryptedData);
     }
 
     //crypt card data
 
     for (const card of cardDeciphered) {
+      const cardId = card.cardId;
+      const vaultId = card.vaultId;
+
+      delete card.cardId;
+      delete card.vaultId;
+
       const { encryptedData, encipher } = await encryption.encrypt(
         card,
         "card",
@@ -223,9 +229,10 @@ export const updateOneUserPassword = async (req, res) => {
         ...encryptedData,
         cardEncrypted: encipher,
       };
+
       const updateCard = await updateCardInVault(
-        card.vaultId,
-        card.cardId,
+        vaultId,
+        cardId,
         cardEncryptedData
       );
     }
@@ -235,8 +242,6 @@ export const updateOneUserPassword = async (req, res) => {
     console.error("Error occurred during user retrieval:", error);
     res.status(500).send({ success: false, message: error.message });
   }
-
-  res.send({ fin: "fin" });
 };
 
 export const deleteOneUser = async (req, res) => {
