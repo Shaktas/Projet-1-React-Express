@@ -1,4 +1,4 @@
-import { avatarService } from "../services/avatarService.js";
+import { avatarService } from "../Services/avatarService.js";
 
 export default async function avatarController(req, res) {
   try {
